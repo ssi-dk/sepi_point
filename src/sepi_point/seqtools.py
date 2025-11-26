@@ -115,8 +115,8 @@ class DnaSeq(BioSeq):
         } 
         protein_seq = "" 
         mod = len(seq)%3
-        if not mod == 0:
-            print(f"Warning: number of nucleotides in sequence is not divisible by 3. Ignoring {mod} nt at the end of sequence when translating to protein.", file=sys.stderr)
+        #if not mod == 0:
+        #    print(f"Warning: number of nucleotides in sequence is not divisible by 3. Ignoring {mod} nt at the end of sequence when translating to protein.", file=sys.stderr)
         illegal_codons = 0
         for i in range(0, len(seq)-mod, 3):
             codon = seq[i:i + 3]

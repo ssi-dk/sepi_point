@@ -4,7 +4,10 @@ version = "0.1.0"
 description = "Detection of point mutation-mediated antimicrobial resistance in Staphylococcus epidermidis "
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = ["pandas","numpy"]
+dependencies = [
+    "pandas",
+    "numpy",
+]
 
 [dependency-groups]
 dev = ["pytest"]

@@ -73,7 +73,7 @@ if __name__ == "__main__":
     ###
     wgs_data = WgsData.from_folders(assembly_data_folder=args.assembly_dir, paired_end_read_data_folder=args.read_dir)
     print(f"Loaded data for {len(wgs_data)} samples.")
-    print(f"Running SNP detection on {len(wgs_data.paired_end_read_files)} samples with paired end read data  and {len(wgs_data.assembly_files)} samples with assembly data")
+    print(f"Running SNP detection on {len(wgs_data.paired_end_read_files)} samples with paired end read data and {len(wgs_data.assembly_files)} samples with assembly data")
 
     mf = MutationFinder()
     mf.load_and_check_db(mutation_db_tsv=mutation_db_tsv,sequence_db_fasta=mutation_db_fasta)
@@ -86,7 +86,11 @@ if __name__ == "__main__":
                 output_name_fastq = f"{sample_name}_fastq"
                 output_dir_fasta = args.output.joinpath(output_name_fasta)
                 output_dir_fasta.mkdir(exist_ok=True)
-
+                logger.info(f"#####################################################################")
+                logger.info(f"Running sepi_point on {sample_name}")
+                logger.info(f"Using input {file_paths['assembly_file']}")
+                logger.info(f"Printing output to {output_dir_fasta}")
+                print(f"Running sepi_point on {sample_name}")
                 snp_file = sp.run_nucmer_and_showsnps(assembly_file=file_paths["assembly_file"],
                                                    output_dir=output_dir_fasta, output_prefix=sample_name,
                                                    reference_fasta=mutation_db_fasta, logger=logger)
@@ -98,6 +102,11 @@ if __name__ == "__main__":
                 output_name_fastq = sample_name
             output_dir_fastq = args.output.joinpath(output_name_fastq)
             output_dir_fastq.mkdir(exist_ok=True)
+            logger.info(f"#####################################################################")
+            logger.info(f"Running sepi_point on {sample_name}")
+            logger.info(f"Using inputs {file_paths['r1_file']}, {file_paths['r2_file']}")
+            logger.info(f"Printing output to {output_dir_fastq}")
+            print(f"Running sepi_point on {sample_name}")
             vcf = sp.run_mapping_and_variant_calling(r1_file=file_paths["r1_file"], r2_file=file_paths["r2_file"],
                                                      output_dir=output_dir_fastq, output_prefix=sample_name,
                                                      reference_fasta=mutation_db_fasta,
@@ -110,6 +119,11 @@ if __name__ == "__main__":
             output_name_fasta = sample_name
             output_dir_fasta = args.output.joinpath(output_name_fasta)
             output_dir_fasta.mkdir(exist_ok=True)
+            logger.info(f"#####################################################################")
+            logger.info(f"Running sepi_point on {sample_name}")
+            logger.info(f"Using input {file_paths['assembly_file']}")
+            logger.info(f"Printing output to {output_dir_fasta}")
+            print(f"Running sepi_point on {sample_name}")
             snp_file = sp.run_nucmer_and_showsnps(assembly_file=file_paths["assembly_file"],
                                                   output_dir=output_dir_fasta, output_prefix=sample_name,
                                                   reference_fasta=mutation_db_fasta, logger=logger)
