@@ -1,0 +1,40 @@
+gene	type	mutation	category
+fusA	protein	L461K	Fusidic acid
+gyrA	protein	S84Y	Fluoroquinolone
+gyrA	protein	S84F	Fluoroquinolone
+gyrA	protein	E88K	Fluoroquinolone
+parC	protein	S80Y	Fluoroquinolone
+parC	protein	S80F	Fluoroquinolone
+parC	protein	D84Y	Fluoroquinolone
+parC	protein	S80I	Fluoroquinolone
+parE	protein	N404S	Fluoroquinolone
+qacA4	protein	A157G	Chlorhexidine
+qacA4	protein	A378V	Chlorhexidine
+rpoB	protein	S464F	Rifampicin, vancomycin
+rpoB	protein	S464P	Rifampicin, vancomycin
+rpoB	protein	S464Y	Rifampicin, vancomycin
+rpoB	protein	L466S	Rifampicin, vancomycin
+rpoB	protein	Q468L	Rifampicin, vancomycin
+rpoB	protein	Q468K	Rifampicin, vancomycin
+rpoB	protein	D471E	Rifampicin, vancomycin
+rpoB	protein	D471Y	Rifampicin, vancomycin
+rpoB	protein	H481Y	Rifampicin, vancomycin
+rpoB	protein	H481N	Rifampicin, vancomycin
+rpoB	protein	H481C	Rifampicin, vancomycin
+rpoB	protein	S486F	Rifampicin, vancomycin
+rpoB	protein	S486Y	Rifampicin, vancomycin
+rpoB	protein	I527M	Rifampicin, vancomycin
+rpoB	protein	S529L	Rifampicin, vancomycin
+rpoB	protein	A534V	Rifampicin, vancomycin
+walK	protein	P415L	Daptomycin
+walK	protein	V500F	Daptomycin
+walK	protein	Q371-	Daptomycin
+rplC	protein	F147L	Linezolid
+rplC	protein	A157R	Linezolid
+rplD	protein	G71D	Linezolid
+23S	nucleotide	G2447T	Linezolid
+23S	nucleotide	T2504A	Linezolid
+23S	nucleotide	G2505A	Linezolid
+23S	nucleotide	C2534T	Linezolid
+23S	nucleotide	G2576T	Linezolid
+23S	nucleotide	G2603T	Linezolid
