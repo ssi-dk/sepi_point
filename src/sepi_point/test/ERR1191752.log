@@ -1,0 +1,10 @@
+2025-11-26 09:38:44 - INFO - #### RUNNING SEPI_POINT ####
+2025-11-26 09:38:44 - INFO - Checking for mutations found in /Users/b246838/Documents/git.repositories/sepi_point/db/mutations.tsv
+2025-11-26 09:38:44 - INFO - Reference fasta file: /Users/b246838/Documents/git.repositories/sepi_point/db/sequences.fasta
+2025-11-26 09:38:44 - INFO - Using inputs ../../../sepi_point_scripts/examples/ERR1191752_1.fastq.gz, ../../../sepi_point_scripts/examples/ERR1191752_2.fastq.gz
+2025-11-26 09:38:44 - INFO - Sam file found at test/ERR1191752.sam. Skipping bwa mem read mapping.
+2025-11-26 09:38:44 - INFO - Bam file found at test/ERR1191752.bam.
+2025-11-26 09:38:44 - INFO - Sorted bam file found at test/ERR1191752.sorted.bam.
+2025-11-26 09:38:44 - INFO - Sorted sam file found attest/ERR1191752.sorted.sam.
+2025-11-26 09:38:44 - INFO - Vcf file found at test/ERR1191752.vcf.
+2025-11-26 09:38:44 - INFO - Cleaned up bam and sam files from output_folder

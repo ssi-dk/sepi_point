@@ -33,9 +33,9 @@ def parse_args(argv):
                         type=str,
                         required = False)
     parser.add_argument("-n", "--no_clean",
-                        help = "Do not clean up sam and bam files after variant calling. Default True",
-                        type=bool,
-                        default=True)
+                        help = "Do not clean up sam and bam files after variant calling. Default True.",
+                        action= "store_true",
+                        default=False)
     args = parser.parse_args()
     return args
 
@@ -206,12 +206,13 @@ def check_fasta_inputs(assembly_file: Path, mutation_db_tsv: Path, mutation_db_f
     return(all_files_found)
 
 def run_on_reads(r1_file: Path, r2_file: Path, output_dir: Path, output_prefix: str,
-                 mutation_db_tsv: Path, mutation_db_fasta: Path, logger):
+                 mutation_db_tsv: Path, mutation_db_fasta: Path, no_clean:bool, logger):
     all_files_found = check_fastq_inputs(r1_file=r1_file, r2_file=r2_file, mutation_db_tsv=mutation_db_tsv, mutation_db_fasta=mutation_db_fasta, logger=logger)
     if all_files_found:
         vcf = run_mapping_and_variant_calling(r1_file=r1_file, r2_file=r2_file,
                                         output_dir=output_dir, output_prefix=output_prefix,
-                                        reference_fasta=mutation_db_fasta, logger=logger)
+                                        reference_fasta=mutation_db_fasta,
+                                        no_clean=no_clean, logger=logger)
         mf = MutationFinder()
         mf.load_and_check_db(mutation_db_tsv=mutation_db_tsv,sequence_db_fasta=mutation_db_fasta)
         sample_mutations = mf.get_mutations_from_vcf(vcf_file=vcf)
@@ -259,7 +260,7 @@ if __name__ == "__main__":
     results_file = Path(args.output).joinpath(f"{args.sample_name}.results.tsv")
 
     logger = setup_logger(log_file=log_file)
-    db_dir = Path(__file__).parent.parent.joinpath("db")
+    db_dir = Path(__file__).parent.parent.parent.joinpath("db")
     mutation_db_tsv = db_dir.joinpath("mutations.tsv")
     mutation_db_fasta = db_dir.joinpath("sequences.fasta")
 
@@ -271,7 +272,7 @@ if __name__ == "__main__":
         mf, sample_mutations = run_on_reads(r1_file=args.r1_file, r2_file=args.r2_file,
                                             output_dir=args.output, output_prefix=args.sample_name,
                                             mutation_db_tsv=mutation_db_tsv, mutation_db_fasta=mutation_db_fasta,
-                                            logger=logger)
+                                            no_clean=args.no_clean, logger=logger)
             
     elif args.assembly:
         logger.info(f"Using input {args.assembly}")

@@ -66,7 +66,7 @@ if __name__ == "__main__":
 
     log_file = args.output.joinpath("sepi_point.log")
     logger = sp.setup_logger(log_file=log_file)
-    db_dir = Path(__file__).parent.parent.joinpath("db")
+    db_dir = Path(__file__).parent.parent.parent.joinpath("db")
     mutation_db_tsv = db_dir.joinpath("mutations.tsv")
     mutation_db_fasta = db_dir.joinpath("sequences.fasta")
 

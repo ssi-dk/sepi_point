@@ -1,0 +1,6 @@
+Mutation	Gene	Position	Ref	Alt	Ref_codon	Alt_codon
+gyrA::S84F	gyrA	84	S	F	TCT	TTT
+parC::S80F	parC	80	S	F	TCT	TTT
+qacA4::A157G	qacA4	157	A	G	GCT	GGT
+rpoB::D471E	rpoB	471	D	E	GAC	GAA
+rpoB::I527M	rpoB	527	I	M	ATA	ATG
