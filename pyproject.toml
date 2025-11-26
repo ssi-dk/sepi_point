@@ -1,6 +1,6 @@
 [project]
 name = "sepi-point"
-version = "0.3.0"
+version = "0.4.0"
 description = "Detection of point mutation-mediated antimicrobial resistance in Staphylococcus epidermidis "
 readme = "README.md"
 requires-python = ">=3.9"
