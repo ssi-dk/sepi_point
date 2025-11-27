@@ -1,6 +1,6 @@
 import os
 import sys
-from seqtools import DnaSeq, ProteinSeq, NucleotideFasta, ProteinFasta, translate_dna
+from sepi_point.seqtools import DnaSeq, ProteinSeq, NucleotideFasta, ProteinFasta, translate_dna
 from pathlib import Path
 import logging
 import subprocess
@@ -172,9 +172,6 @@ class MutationFinder:
         for sample_name, mutation_summary in mutation_summaries.items():
             # write to long format output
             for mutation, details in mutation_summary.items():
-                print(sample_name)
-                print(mutation)
-                print(details)
                 printlist = [sample_name, mutation]+details
                 o.write("\t".join(printlist)+"\n")
             # write to presence/absence matrix output

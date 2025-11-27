@@ -5,9 +5,10 @@ import sys
 from pathlib import Path
 import logging
 import subprocess
-from mutation_finder import MutationFinder
+from sepi_point.mutation_finder import MutationFinder
 import argparse
 import re
+from importlib import resources
 
 
 def parse_args(argv):
@@ -235,7 +236,7 @@ def run_on_assembly(assembly_file: Path, output_dir: Path, output_prefix: str,
         sys.exit()
     return(mf, sample_mutations)
 
-if __name__ == "__main__":
+def main_cli():
     args = parse_args(argv=sys.argv)
 
     ### Set up output directory
@@ -263,6 +264,8 @@ if __name__ == "__main__":
     db_dir = Path(__file__).parent.parent.parent.joinpath("db")
     mutation_db_tsv = db_dir.joinpath("mutations.tsv")
     mutation_db_fasta = db_dir.joinpath("sequences.fasta")
+    mutation_db_tsv = resources.files("sepi_point.db").joinpath("mutations.tsv")
+    mutation_db_fasta = resources.files("sepi_point.db").joinpath("sequences.fasta")
 
     logger.info(f"#### RUNNING SEPI_POINT ####")
     logger.info(f"Checking for mutations found in {mutation_db_tsv}")
@@ -287,4 +290,7 @@ if __name__ == "__main__":
     sample_mutation_summary = mf.summarize_sample_mutations(sample_mutations=sample_mutations)
     mf.print_sample_mutations(mutation_summary=sample_mutation_summary,summary_output_file=results_file)
 
+
+if __name__ == "__main__":
+    main_cli()
     

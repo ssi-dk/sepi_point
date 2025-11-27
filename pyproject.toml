@@ -8,6 +8,13 @@ dependencies = [
     "pandas",
     "numpy",
 ]
+packages = [
+    { include = "sepi_point", from = "src" }
+]
+
+[tool.setuptools.package-data]
+# include everything in sepi_point/db
+"sepi_point" = ["db/*","example_data"]
 
 [dependency-groups]
 dev = ["pytest"]
@@ -16,5 +23,10 @@ dev = ["pytest"]
 requires = ["uv_build>=0.6.6,<0.7"]
 build-backend = "uv_build"
 
+
 [project.scripts]
-sepi_point = "sepi_point:sepi_point"
+sepi_point = "sepi_point.sepi_point:main_cli"
+sepi_point_batch = "sepi_point.sepi_point_batch:main_cli"
+
+[tool.uv]
+package = true

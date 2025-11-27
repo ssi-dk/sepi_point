@@ -5,11 +5,12 @@ import sys
 from pathlib import Path
 import logging
 import subprocess
-from mutation_finder import MutationFinder
-from seqtools import WgsData
+from sepi_point.mutation_finder import MutationFinder
+from sepi_point.seqtools import WgsData
 import argparse
 import re
-import sepi_point as sp
+import sepi_point.sepi_point as sp
+from importlib import resources
 
 
 def parse_args(argv):
@@ -37,7 +38,7 @@ def parse_args(argv):
 
 
 
-if __name__ == "__main__":
+def main_cli():
     args = parse_args(argv=sys.argv)
     
     ### Check if necessary inputs are provided and that folders exist
@@ -67,8 +68,9 @@ if __name__ == "__main__":
     log_file = args.output.joinpath("sepi_point.log")
     logger = sp.setup_logger(log_file=log_file)
     db_dir = Path(__file__).parent.parent.parent.joinpath("db")
-    mutation_db_tsv = db_dir.joinpath("mutations.tsv")
-    mutation_db_fasta = db_dir.joinpath("sequences.fasta")
+    db_dir = resources.files("sepi_point.db").joinpath("sequences.fasta")
+    mutation_db_tsv = resources.files("sepi_point.db").joinpath("mutations.tsv")
+    mutation_db_fasta = resources.files("sepi_point.db").joinpath("sequences.fasta")
 
     ###
     wgs_data = WgsData.from_folders(assembly_data_folder=args.assembly_dir, paired_end_read_data_folder=args.read_dir)
@@ -135,3 +137,7 @@ if __name__ == "__main__":
     
     mf.print_sample_mutations_batch(mutation_summaries=all_sample_mutations,
                                     summary_output_file=args.output.joinpath("results.tsv"), matrix_output_file=args.output.joinpath("results.matrix.tsv"))
+    
+
+if __name__ == "__main__":
+    main_cli()
