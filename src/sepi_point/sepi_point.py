@@ -177,11 +177,16 @@ def run_mapping_and_variant_calling(r1_file: Path, r2_file: Path,
         logger.info(f"Vcf file found at {vcf}.")
     
     if not no_clean:
-        sam.unlink()
-        bam.unlink()
-        sorted_bam.unlink()
-        sorted_bam_idx.unlink()
-        sorted_sam.unlink()
+        if sam.exists():
+            sam.unlink()
+        if bam.exists():
+            bam.unlink()
+        if sorted_bam.exists():
+            sorted_bam.unlink()
+        if sorted_bam_idx.exists():
+            sorted_bam_idx.unlink()
+        if sorted_sam.exists():
+            sorted_sam.unlink()
         logger.info(f"Cleaned up bam and sam files from output_folder")
 
     return(vcf)
