@@ -67,7 +67,6 @@ class DnaSeq(BioSeq):
         self.sequence = sequence.upper()
         self.phred_scores = phred_scores
     
-
     
     def __repr__(self):
         return f"< DNA sequence object {self.name} of length {len(self)} bp >"
@@ -646,12 +645,12 @@ class WgsData:
         for files in file_paths.values():
             if "r1_file" in files and "r2_file" in files and files["r1_file"] is not None and files["r2_file"]:
                 self.paired_end_read_files.append((files["r1_file"], files["r2_file"]))
-            #else:
-            #    self.paired_end_read_files.append((None, None))
+            else:
+                self.paired_end_read_files.append((None, None))
             if "assembly_file" in files and files["assembly_file"] is not None:
                 self.assembly_files.append(files["assembly_file"])
-            #else:
-            #    self.assembly_files.append(None)
+            else:
+                self.assembly_files.append(None)
         self.sample_data = sample_data
         if sample_data:
             self.sample_data_df = pandas.DataFrame.from_dict(
@@ -745,11 +744,11 @@ class WgsData:
         fasta_file_pattern=r"(?P<sample_name>.+?)(\.fa|\.fna|\.fasta)$",
         paired_end_reads_pattern=r"(?P<sample_name>.+?)(?P<sample_number>(_S[0-9]+)?)(?P<lane>(_L[0-9]+)?)[\._]R?(?P<paired_read_number>[1|2])(?P<set_number>(_[0-9]+)?)(?P<file_extension>\.fastq\.gz)",
     ):
-        if assembly_data_folder:
+        if assembly_data_folder is not None:
             assembly_data_dict = cls.parse_folder_for_fasta_files(
                 data_folder=assembly_data_folder, fasta_file_pattern=fasta_file_pattern
             )
-        if assembly_data_folder and len(assembly_data_dict) > 0:
+        if assembly_data_folder is not None and len(assembly_data_dict) > 0:
             assembly_df = pandas.DataFrame.from_dict(assembly_data_dict, orient="index")
             assembly_df.columns = ["assembly_file"]
         else:
@@ -758,18 +757,18 @@ class WgsData:
                     "assembly_file": [],
                 }
             )
-        if paired_end_read_data_folder:
+        if paired_end_read_data_folder is not None:
             paired_end_read_data_dict, unmatched_read_files = (
                 cls.parse_folder_for_paired_end_reads(
                     data_folder=paired_end_read_data_folder,
                     paired_end_reads_pattern=paired_end_reads_pattern,
                 )
             )
-
+        if paired_end_read_data_folder is not None and len(paired_end_read_data_dict) > 0:
             paired_end_read_df = pandas.DataFrame(paired_end_read_data_dict).transpose()
         else:
             paired_end_read_df = pandas.DataFrame(
-                {"sample_name": []}, index="assembly_file"
+                {"sample_name": [], "r1_file": [], "r2_file": []}
             )
 
         combined_df = assembly_df.merge(

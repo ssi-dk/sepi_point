@@ -34,12 +34,11 @@ def parse_args(argv):
                         type=str,
                         required = False)
     parser.add_argument("-n", "--no_clean",
-                        help = "Do not clean up sam and bam files after variant calling. Default True.",
+                        help = "Do not clean up sam and bam files after variant calling. Default False.",
                         action= "store_true",
                         default=False)
     args = parser.parse_args()
     return args
-
 
 
 
@@ -73,9 +72,59 @@ def setup_logger(log_file, log_level="INFO") -> logging.RootLogger:
     return logger
 
 
+def check_fastq_inputs(r1_file: Path, r2_file: Path, mutation_db_tsv: Path, mutation_db_fasta: Path, logger):
+    """"
+    Check if all inputs and database files are present for paired end read input
+    """
+    all_files_found = True
+    if not r1_file.exists():
+        all_files_found = False
+        warning = f"No R1 input file found at {r1_file}"
+        print(warning)
+        logger.error(warning)
+    if not r2_file.exists():
+        all_files_found = False
+        warning = f"No R2 input file found at {r2_file}"
+        print(warning)
+        logger.error(warning)
+    if not mutation_db_fasta.exists():
+        all_files_found = False
+        warning = f"No mutation db tsv found at {mutation_db_tsv}"
+        print(warning)
+        logger.error(warning)
+    if not mutation_db_fasta.exists():
+        all_files_found = False
+        warning = f"No mutation db fasta file found at {mutation_db_fasta}"
+        print(warning)
+        logger.error(warning)
+    return(all_files_found)
+
+
+def check_fasta_inputs(assembly_file: Path, mutation_db_tsv: Path, mutation_db_fasta: Path, logger):
+    """"
+    Check if all inputs and database files are present for assembly input
+    """
+    all_files_found = True
+    if not assembly_file.exists():
+        all_files_found = False
+        warning = f"No assembly file found at {assembly_file}"
+        print(warning)
+        logger.error(warning)
+    if not mutation_db_fasta.exists():
+        all_files_found = False
+        warning = f"No mutation db tsv found at {mutation_db_tsv}"
+        print(warning)
+        logger.error(warning)
+    if not mutation_db_fasta.exists():
+        all_files_found = False
+        warning = f"No mutation db fasta file found at {mutation_db_fasta}"
+        print(warning)
+        logger.error(warning)
+    return(all_files_found)
+
 
 def run_mapping_and_variant_calling(r1_file: Path, r2_file: Path,
-                                    output_dir: Path,output_prefix: str, 
+                                    output_dir: Path, output_prefix: str, 
                                     reference_fasta: Path,
                                     no_clean: bool, logger) -> Path:
     """"
@@ -156,56 +205,6 @@ def run_nucmer_and_showsnps(assembly_file: Path,
     return(snps_file)
 
 
-def check_fastq_inputs(r1_file: Path, r2_file: Path, mutation_db_tsv: Path, mutation_db_fasta: Path, logger):
-    """"
-    Check if all inputs and database files are present for paired end read input
-    """
-    all_files_found = True
-    if not r1_file.exists():
-        all_files_found = False
-        warning = f"No R1 input file found at {r1_file}"
-        print(warning)
-        logger.error(warning)
-    if not r2_file.exists():
-        all_files_found = False
-        warning = f"No R2 input file found at {r2_file}"
-        print(warning)
-        logger.error(warning)
-    if not mutation_db_fasta.exists():
-        all_files_found = False
-        warning = f"No mutation db tsv found at {mutation_db_tsv}"
-        print(warning)
-        logger.error(warning)
-    if not mutation_db_fasta.exists():
-        all_files_found = False
-        warning = f"No mutation db fasta file found at {mutation_db_fasta}"
-        print(warning)
-        logger.error(warning)
-    return(all_files_found)
-
-
-def check_fasta_inputs(assembly_file: Path, mutation_db_tsv: Path, mutation_db_fasta: Path, logger):
-    """"
-    Check if all inputs and database files are present for assembly input
-    """
-    all_files_found = True
-    if not assembly_file.exists():
-        all_files_found = False
-        warning = f"No assembly file found at {assembly_file}"
-        print(warning)
-        logger.error(warning)
-    if not mutation_db_fasta.exists():
-        all_files_found = False
-        warning = f"No mutation db tsv found at {mutation_db_tsv}"
-        print(warning)
-        logger.error(warning)
-    if not mutation_db_fasta.exists():
-        all_files_found = False
-        warning = f"No mutation db fasta file found at {mutation_db_fasta}"
-        print(warning)
-        logger.error(warning)
-    return(all_files_found)
-
 def run_on_reads(r1_file: Path, r2_file: Path, output_dir: Path, output_prefix: str,
                  mutation_db_tsv: Path, mutation_db_fasta: Path, no_clean:bool, logger):
     all_files_found = check_fastq_inputs(r1_file=r1_file, r2_file=r2_file, mutation_db_tsv=mutation_db_tsv, mutation_db_fasta=mutation_db_fasta, logger=logger)
@@ -261,11 +260,8 @@ def main_cli():
     results_file = Path(args.output).joinpath(f"{args.sample_name}.results.tsv")
 
     logger = setup_logger(log_file=log_file)
-    db_dir = Path(__file__).parent.parent.parent.joinpath("db")
-    mutation_db_tsv = db_dir.joinpath("mutations.tsv")
-    mutation_db_fasta = db_dir.joinpath("sequences.fasta")
-    mutation_db_tsv = resources.files("sepi_point.db").joinpath("mutations.tsv")
-    mutation_db_fasta = resources.files("sepi_point.db").joinpath("sequences.fasta")
+    mutation_db_tsv = resources.files("sepi_point").joinpath("db").joinpath("mutations.tsv")
+    mutation_db_fasta = resources.files("sepi_point").joinpath("db").joinpath("sequences.fasta")
 
     logger.info(f"#### RUNNING SEPI_POINT ####")
     logger.info(f"Checking for mutations found in {mutation_db_tsv}")

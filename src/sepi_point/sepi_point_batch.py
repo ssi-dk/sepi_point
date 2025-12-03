@@ -28,7 +28,7 @@ def parse_args(argv):
                         type=Path,
                         required = True)
     parser.add_argument("-n", "--no_clean",
-                        help = "Do not clean up sam and bam files after variant calling. Default True.",
+                        help = "Do not clean up sam and bam files after variant calling. Default False.",
                         action= "store_true",
                         default=False)
     args = parser.parse_args()
@@ -67,16 +67,12 @@ def main_cli():
 
     log_file = args.output.joinpath("sepi_point.log")
     logger = sp.setup_logger(log_file=log_file)
-    db_dir = Path(__file__).parent.parent.parent.joinpath("db")
-    db_dir = resources.files("sepi_point.db").joinpath("sequences.fasta")
-    mutation_db_tsv = resources.files("sepi_point.db").joinpath("mutations.tsv")
-    mutation_db_fasta = resources.files("sepi_point.db").joinpath("sequences.fasta")
+    mutation_db_tsv = resources.files("sepi_point").joinpath("db").joinpath("mutations.tsv")
+    mutation_db_fasta = resources.files("sepi_point").joinpath("db").joinpath("sequences.fasta")
 
     ###
     wgs_data = WgsData.from_folders(assembly_data_folder=args.assembly_dir, paired_end_read_data_folder=args.read_dir)
-    print(f"Loaded data for {len(wgs_data)} samples.")
-    print(f"Running SNP detection on {len(wgs_data.paired_end_read_files)} samples with paired end read data and {len(wgs_data.assembly_files)} samples with assembly data")
-
+    print(f"Loaded data for {len(wgs_data)} samples with read and/or assembly data.")
     mf = MutationFinder()
     mf.load_and_check_db(mutation_db_tsv=mutation_db_tsv,sequence_db_fasta=mutation_db_fasta)
 
