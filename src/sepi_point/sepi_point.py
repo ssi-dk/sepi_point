@@ -209,6 +209,21 @@ def run_nucmer_and_showsnps(assembly_file: Path,
         logger.info(f"Nucmer snps file found at {snps_file}.")
     return(snps_file)
 
+def run_blast(assembly_file: Path,
+              output_dir: Path, output_prefix: str,
+              reference_fasta: Path, logger) -> Path:
+    """"
+    Blast genes in reference fasta file
+    """
+    prefix = output_dir.joinpath(output_prefix)
+    blast_output_tsv = Path(f"{prefix}.blast.tsv")
+    cmd = f"blastn -query {reference_fasta} -subject {assembly_file} -qcov_hsp_perc 60 -perc_identity 80 -outfmt '6 qseqid sseqid pident length qlen mismatch gapopen qstart qend sstart send qseq sseq evalue bitscore' -out {blast_output_tsv}"
+    if not blast_output_tsv.exists():
+        stdout, stderr = execute_cmd_and_log(cmd=cmd, logger=logger,log_stdout=False, log_stderr=False)
+    else:
+        logger.info(f"Blast output file found at {blast_output_tsv}.")
+    return(blast_output_tsv)
+
 
 def run_on_reads(r1_file: Path, r2_file: Path, output_dir: Path, output_prefix: str,
                  mutation_db_tsv: Path, mutation_db_fasta: Path, no_clean:bool, logger):

@@ -116,6 +116,24 @@ class MutationFinder:
                 sample_mutation_dict[gene][pos] = alt
         return(sample_mutation_dict)
 
+    def get_mutations_from_blast_tsv(self, blast_output_file: Path):
+        blast_hit_dict = {}
+        with open(blast_output_file) as f:
+            for line in f:
+                line = line.rstrip('\n').split('\t')
+                gene = line[0]
+                bitscore = int(line[14])
+                if gene not in blast_hit_dict or bitscore > blast_hit_dict[gene][0]:
+                    qseq = line[11]
+                    sseq = line[12]
+                    blast_hit_dict[gene] = (bitscore, qseq, sseq)
+        f.close()
+
+        sample_mutation_dict = {}
+        for gene, stats in blast_hit_dict.items():
+            
+
+
     def summarize_sample_mutations(self, sample_mutations: dict) -> dict:
         mutation_summary = {}
         for gene, alt_dict in self.nt_mutation_dict.items():
