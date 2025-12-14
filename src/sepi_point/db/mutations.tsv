@@ -1,4 +1,5 @@
 gene	type	mutation	category
+dfrC	protein	F99Y	Trimethoprim-sulfamethoxazole
 fusA	protein	L461K	Fusidic acid
 gyrA	protein	S84Y	Fluoroquinolone
 gyrA	protein	S84F	Fluoroquinolone
@@ -38,3 +39,4 @@ rplD	protein	G71D	Linezolid
 23S	nucleotide	C2534T	Linezolid
 23S	nucleotide	G2576T	Linezolid
 23S	nucleotide	G2603T	Linezolid
+thyA-intergenic	nucleotide	A286G	Trimethoprim-sulfamethoxazole

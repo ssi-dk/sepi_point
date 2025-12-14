@@ -149,7 +149,7 @@ def run_mapping_and_variant_calling(r1_file: Path, r2_file: Path,
     # Run samtools view to filter unmapped reads and convert to bam
     # -F 260 to only include mapped and exclude secondary alignments,
     if not vcf.exists() and not sorted_sam.exists() and not sorted_bam.exists() and not bam.exists():
-        cmd = f"samtools view -q 30 -h -F 260 -O BAM -o {bam} {sam}"
+        cmd = f"samtools view -q 30 -h -F 4 -O BAM -o {bam} {sam}"
         stdout, stderr = execute_cmd_and_log(cmd=cmd, logger=logger)
     else:
         logger.info(f"Bam file found at {bam}.")
@@ -171,7 +171,7 @@ def run_mapping_and_variant_calling(r1_file: Path, r2_file: Path,
     
     # run bcftools call to generate vcf
     if not vcf.exists():
-        cmd = f"bcftools mpileup -A -f {reference_fasta} {sorted_sam} | bcftools call --ploidy 1 -mv -Ov -o {vcf}"
+        cmd = f"bcftools mpileup -A -f {reference_fasta} {sorted_sam} | bcftools call --ploidy 2 -mv -Ov -o {vcf}"
         stdout, stderr = execute_cmd_and_log(cmd=cmd, logger=logger,log_stdout=False, log_stderr=False)
     else:
         logger.info(f"Vcf file found at {vcf}.")
