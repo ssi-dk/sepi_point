@@ -94,11 +94,12 @@ class MutationFinder:
                         format = line[FORMAT_index].split(":")
                         info = line[INFO_index].split(":")
                         GT_index = format.index("GT")
-                        if info[GT_index] == "1":
+                        if not info[GT_index] == "0/0":
                             gene = line[CHROM_index]
                             pos = line[POS_index]
                             alt = line[ALT_index]
                             sample_mutation_dict[gene][pos] = alt
+        print(sample_mutation_dict.keys())
         return(sample_mutation_dict)
 
     def get_mutations_from_nucmer_snps(self, nucmer_snp_file: Path):
@@ -115,6 +116,49 @@ class MutationFinder:
                     sample_mutation_dict[gene] = {}
                 sample_mutation_dict[gene][pos] = alt
         return(sample_mutation_dict)
+
+    def get_mutations_from_blast_tsv(self, blast_output_file: Path):
+        blast_hit_dict = {}
+        with open(blast_output_file) as f:
+            for line in f:
+                line = line.rstrip('\n').split('\t')
+                gene = line[0]
+                bitscore = int(line[14])
+                if gene not in blast_hit_dict or bitscore > blast_hit_dict[gene][0]:
+                    qseq = line[11]
+                    sseq = line[12]
+                    blast_hit_dict[gene] = line
+        f.close()
+
+        sample_mutation_dict = {}
+        for gene in self.nt_mutation_dict:
+            sample_mutation_dict[gene] = {}
+
+        for gene, stats in blast_hit_dict.items():      
+            qseqid = stats[0]
+            qstart = stats[7]
+            qseq = stats[11]
+            sseq = stats[12]
+            bitscore = stats[14]
+
+            qstart = int(qstart)
+            ref_pos = qstart
+
+            for ref_base, alt_base in zip(qseq, sseq):
+
+                if ref_base == "-" or alt_base == "-":
+                    # skip indels — only substitutions desired
+                    if ref_base != "-":  # reference advances only if ref_base is a nucleotide
+                        ref_pos += 1
+                    continue
+
+                if ref_base.upper() != alt_base.upper():
+                    sample_mutation_dict[qseqid].append(f"{ref_base}{ref_pos}{alt_base}")
+
+                ref_pos += 1
+
+        return sample_mutation_dict
+
 
     def summarize_sample_mutations(self, sample_mutations: dict) -> dict:
         mutation_summary = {}
