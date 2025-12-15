@@ -94,7 +94,7 @@ class MutationFinder:
                         format = line[FORMAT_index].split(":")
                         info = line[INFO_index].split(":")
                         GT_index = format.index("GT")
-                        if info[GT_index] == "1/1" or info[GT_index] == "1/0" or info[GT_index] == "0/1":
+                        if not info[GT_index] == "0/0":
                             gene = line[CHROM_index]
                             pos = line[POS_index]
                             alt = line[ALT_index]
