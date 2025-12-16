@@ -17,9 +17,10 @@ class MutationFinder:
         self.sequences = NucleotideFasta.from_file(sequence_db_fasta)
         self.protein_sequences = self.sequences.translate()
         aa_mutation_dict = {}
-        aa_mutation_list = []
+        aa_mutation_info = {}
         codon_mutation_dict = {}
         nt_mutation_dict = {}
+        nt_mutation_info = {}
         aa_to_codon = setup_aa_to_codon_table()
         with open(self.tsv_path) as f:
             firstline = True
@@ -31,6 +32,7 @@ class MutationFinder:
                     type_idx = line.index("type")
                     mutation_idx = line.index("mutation")
                     category_idx = line.index("category")
+                    frequency_idx = line.index("req_frequency")
                 else:
                     gene = line[gene_idx]
                     mutation = line[mutation_idx]
@@ -41,7 +43,6 @@ class MutationFinder:
                             print(f"Warning. Mutation tsv file contains mutation {gene}::{mutation}, but reference aa does not match fasta file")
                         alt_aa = mutation[-1]
                         alt_codons = aa_to_codon[alt_aa]
-                        aa_mutation_list.append(gene+"::"+mutation)
                         if not gene in aa_mutation_dict:
                             aa_mutation_dict[gene] = {}
                             aa_mutation_dict[gene][str(position)] = [mutation]
@@ -53,6 +54,7 @@ class MutationFinder:
                         else:
                             aa_mutation_dict[gene][str(position)].append(mutation)
                             codon_mutation_dict[gene][str(position)] += alt_codons
+                        aa_mutation_info[gene+"::"+mutation] = line
                     else:
                         ref_nt = mutation[0]
                         if not self.sequences[gene][0].sequence[position-1] == ref_nt:
@@ -65,8 +67,10 @@ class MutationFinder:
                             nt_mutation_dict[gene][str(position)] = [alt_nt]
                         else:
                             nt_mutation_dict[gene][str(position)].append(alt_nt)
+                        nt_mutation_info[gene+"::"+mutation] = line
 
-        self.aa_mutation_list = aa_mutation_list
+        self.aa_mutation_info = aa_mutation_info
+        self.nt_mutation_info = nt_mutation_info
         self.aa_mutation_dict = aa_mutation_dict
         self.codon_mutation_dict = codon_mutation_dict
         self.nt_mutation_dict = nt_mutation_dict
@@ -97,6 +101,7 @@ class MutationFinder:
                         if not info[GT_index] == "0/0":
                             gene = line[CHROM_index]
                             pos = line[POS_index]
+                            ref = line[REF_index]
                             alt = line[ALT_index]
                             sample_mutation_dict[gene][pos] = alt
         print(sample_mutation_dict.keys())
@@ -169,7 +174,8 @@ class MutationFinder:
                         if alt_nt in sample_mutations[gene][nt_position]:
                             ref_nt = self.sequences[gene][0].sequence[int(nt_position)-1]
                             nt_mut = ref_nt+nt_position+alt_nt
-                            mutation_summary[gene+"::"+nt_mut] = [gene,nt_position,ref_nt,alt_nt,"",""]
+                            mut_string = gene+"::"+nt_mut
+                            mutation_summary[mut_string] = [gene,nt_position,ref_nt,alt_nt,"",""]
         for gene, codon_dict in self.codon_mutation_dict.items():
             for aa_position, codons in codon_dict.items():
                 start_position = int(aa_position)*3-2
