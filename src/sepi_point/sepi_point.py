@@ -171,7 +171,7 @@ def run_mapping_and_variant_calling(r1_file: Path, r2_file: Path,
     
     # run bcftools call to generate vcf
     if not vcf.exists():
-        cmd = f"bcftools mpileup -A -f {reference_fasta} {sorted_sam} | bcftools call --ploidy 2 -mv -Ov -o {vcf}"
+        cmd = f"bcftools mpileup -A -f {reference_fasta} {sorted_sam} | bcftools call -p 0.5 --ploidy 2 -mv -Ov -o {vcf}"
         stdout, stderr = execute_cmd_and_log(cmd=cmd, logger=logger,log_stdout=False, log_stderr=False)
     else:
         logger.info(f"Vcf file found at {vcf}.")
