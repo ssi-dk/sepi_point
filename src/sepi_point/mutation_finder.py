@@ -119,10 +119,11 @@ class MutationFinder:
                 line = line.rstrip('\n').split('\t')
                 gene = line[10]
                 pos = line[0]
+                ref = line[1]
                 alt = line[2]
                 if not gene in sample_mutation_dict:
                     sample_mutation_dict[gene] = {}
-                sample_mutation_dict[gene][pos] = alt
+                sample_mutation_dict[gene][pos] = {alt: {"mutation": ref+pos+alt, "ref": ref, "alt_depth": 1, "total_depth": 1}}
         return(sample_mutation_dict)
 
     def get_mutations_from_blast_tsv(self, blast_output_file: Path):
@@ -231,7 +232,8 @@ class MutationFinder:
                         except ValueError:
                             alt_freq_req == 0
                         ref = nt_dict[nt]["ref"]
-                        if not len(ref) == len(nt) and alt_depth/total_depth >= alt_freq_req:
+                        print(f"{gene} {nt_position} {nt} {ref}")
+                        if (not len(ref) == len(nt) or ref == "." or nt == ".") and alt_depth/total_depth >= alt_freq_req:
                             category = info_dict["category"]
                             aa_mut = info_dict["mutation"]
                             mutation_summary[gene+"::"+aa_mut] = [gene,str(aa_position),ref,nt,"","",f"{alt_depth}/{total_depth}",category]
