@@ -287,7 +287,13 @@ class Fasta:
     
     def __repr__(self):
         return f"< Fasta object containing {len(self.entries)} sequences, total length {len(self)} bp >"
-
+    
+    @property
+    def seq_names(self):
+        names = []
+        for entry in self:
+            names.append(entry.name)
+        return(names)
 
             
     def write(self, output_file: str = None, linelength: int = None) -> None:
