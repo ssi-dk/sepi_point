@@ -19,9 +19,7 @@ class MutationFinder:
         aa_mutation_list = []
         codon_mutation_dict = {}
         nt_mutation_dict = {}
-        nt_mutation_info = {}
-        deletion_dict = {}
-        insertion_dict = {}
+        indel_dict = {}
         aa_to_codon = setup_aa_to_codon_table()
         with open(self.tsv_path) as f:
             firstline = True
@@ -40,18 +38,15 @@ class MutationFinder:
                     category = line[category_idx]
                     req_frequency = line[req_frequency_idx]
                     if line[type_idx] == "protein":
-                        if mutation.endswith("del"):
-                            position = int(mutation[1:-3])
-                            if not gene in deletion_dict:
-                                deletion_dict[gene] = {position: {"mutation": mutation, "category": category, "req_frequency": req_frequency}}
+                        if mutation.endswith("del") or mutation.startswith("ins"):
+                            if mutation.endswith("del"):
+                                position = int(mutation[1:-3])
                             else:
-                                deletion_dict[gene][str(position)] = {"mutation": mutation, "category": category, "req_frequency": req_frequency}
-                        elif mutation.startswith("ins"):
-                            position = int(mutation[3:])
-                            if not gene in insertion_dict:
-                                insertion_dict[gene] = {position: {"mutation": mutation, "category": category, "req_frequency": req_frequency}}
+                                position = int(mutation[3:])
+                            if not gene in indel_dict:
+                                indel_dict[gene] = {position: {"mutation": mutation, "category": category, "req_frequency": req_frequency}}
                             else:
-                                insertion_dict[gene][str(position)] = {"mutation": mutation, "category": category, "req_frequency": req_frequency}
+                                indel_dict[gene][str(position)] = {"mutation": mutation, "category": category, "req_frequency": req_frequency}
 
                         else:
                             position = int(mutation[1:-1])
@@ -81,6 +76,7 @@ class MutationFinder:
         self.aa_mutation_list = aa_mutation_list
         self.codon_mutation_dict = codon_mutation_dict
         self.nt_mutation_dict = nt_mutation_dict
+        self.indel_dict = indel_dict
         return(None)
 
     def get_mutations_from_vcf(self, vcf_file: Path) -> dict:
@@ -219,6 +215,26 @@ class MutationFinder:
                         category = codon_dict[sample_codon]["category"]
                         mutation_summary[gene+"::"+aa_mut] = [gene,aa_position,ref_aa,alt_aa,ref_codon,sample_codon,f"{alt_depth}/{total_depth}",category]
 
+        for gene, position_dict in self.indel_dict.items():
+            for aa_position, info_dict in position_dict.items():
+                print(info_dict)
+                nt_position = int(aa_position)*3-2
+                check_start = nt_position - 6
+                for nt_pos in range(check_start, nt_position):
+                    if str(nt_pos) in sample_mutations[gene]:
+                        nt_dict = sample_mutations[gene][str(nt_pos)]
+                        nt = list(nt_dict.keys())[0]
+                        alt_depth = nt_dict[nt]["alt_depth"]
+                        total_depth = nt_dict[nt]["total_depth"]
+                        try:
+                            alt_freq_req = float(info_dict["req_frequency"])
+                        except ValueError:
+                            alt_freq_req == 0
+                        ref = nt_dict[nt]["ref"]
+                        if not len(ref) == len(nt) and alt_depth/total_depth >= alt_freq_req:
+                            category = info_dict["category"]
+                            aa_mut = info_dict["mutation"]
+                            mutation_summary[gene+"::"+aa_mut] = [gene,str(aa_position),ref,nt,"","",f"{alt_depth}/{total_depth}",category]
         return(mutation_summary)
 
     @staticmethod
