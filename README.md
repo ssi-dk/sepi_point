@@ -13,8 +13,12 @@ pip install sepi_point
 ### From Conda ###
 
 `conda create -n sepi_point
+
 conda activate sepi_point
-conda install thej-ssi::sepconda install thej-ssi`
+
+conda install thej-ssi::sepi_point
+
+sepi_point -h`
 
 
 ### Dependencies ###
@@ -87,6 +91,7 @@ In single isolate mode, all resistance-associated mutations identified will be p
 In batch mode each isolate in the provided input folder(s) will have their own subfolder within the output folder containing results from that isolate.
 
 In addition, the base output folder will contain results.tsv with the combined results from all isolates, as well as results.matrix.tsv, a 0/1 filled matrix with the presence/absence of each mutation in each isolate.
+
 
 
 
