@@ -16,7 +16,7 @@ class MutationFinder:
         self.fasta_path = os.path.abspath(sequence_db_fasta)
         self.sequences = NucleotideFasta.from_file(sequence_db_fasta)
         self.protein_sequences = self.sequences.translate()
-        aa_mutation_list = []
+        mutation_list = []
         codon_mutation_dict = {}
         nt_mutation_dict = {}
         indel_dict = {}
@@ -47,7 +47,6 @@ class MutationFinder:
                                 indel_dict[gene] = {position: {"mutation": mutation, "category": category, "req_frequency": req_frequency}}
                             else:
                                 indel_dict[gene][str(position)] = {"mutation": mutation, "category": category, "req_frequency": req_frequency}
-
                         else:
                             position = int(mutation[1:-1])
                             ref_aa = mutation[0]
@@ -57,12 +56,10 @@ class MutationFinder:
                             alt_codons = aa_to_codon[alt_aa]
                             if not gene in codon_mutation_dict:
                                 codon_mutation_dict[gene] = {}
-                                if not position in codon_mutation_dict[gene]:
-                                    codon_mutation_dict[gene][str(position)] = {}
-                                for codon in alt_codons:
-                                    codon_mutation_dict[gene][str(position)][codon] = {"mutation": mutation, "ref": ref_aa, "alt": alt_aa, "category": category, "req_frequency": req_frequency}
-                                
-                            aa_mutation_list.append(gene)
+                            if not str(position) in codon_mutation_dict[gene]:
+                                codon_mutation_dict[gene][str(position)] = {}
+                            for codon in alt_codons:
+                                codon_mutation_dict[gene][str(position)][codon] = {"mutation": mutation, "ref": ref_aa, "alt": alt_aa, "category": category, "req_frequency": req_frequency}.copy()
                     else:
                         position = int(mutation[1:-1])
                         ref_nt = mutation[0]
@@ -73,7 +70,8 @@ class MutationFinder:
                             nt_mutation_dict[gene] = {str(position): {"mutation": mutation, "ref": ref_nt, "alt": alt_nt, "category": category, "req_frequency": req_frequency}}
                         else:
                             nt_mutation_dict[gene][str(position)] = {"mutation": mutation, "ref": ref_nt, "alt": alt_nt, "category": category, "req_frequency": req_frequency}
-        self.aa_mutation_list = aa_mutation_list
+                    mutation_list.append(gene+"::"+mutation)
+        self.mutation_list = mutation_list
         self.codon_mutation_dict = codon_mutation_dict
         self.nt_mutation_dict = nt_mutation_dict
         self.indel_dict = indel_dict
@@ -183,7 +181,7 @@ class MutationFinder:
                         try:
                             alt_freq_req = float(nt_dict["req_frequency"])
                         except ValueError:
-                            alt_freq_req == 0
+                            alt_freq_req = 0
                         if alt_depth/total_depth >= alt_freq_req:
                             ref_nt = nt_dict["ref"]
                             nt_mut = ref_nt+nt_position+alt_nt
@@ -207,7 +205,7 @@ class MutationFinder:
                     try:
                         alt_freq_req = float(codon_dict[sample_codon]["req_frequency"])
                     except ValueError:
-                        alt_freq_req == 0
+                        alt_freq_req = 0
                     if alt_depth/total_depth >= alt_freq_req:
                         ref_codon = self.sequences[gene][0].sequence[start_position-1:start_position+2]
                         ref_aa = codon_dict[sample_codon]["ref"]
@@ -218,7 +216,6 @@ class MutationFinder:
 
         for gene, position_dict in self.indel_dict.items():
             for aa_position, info_dict in position_dict.items():
-                print(info_dict)
                 nt_position = int(aa_position)*3-2
                 check_start = nt_position - 6
                 for nt_pos in range(check_start, nt_position):
@@ -230,9 +227,8 @@ class MutationFinder:
                         try:
                             alt_freq_req = float(info_dict["req_frequency"])
                         except ValueError:
-                            alt_freq_req == 0
+                            alt_freq_req = 0
                         ref = nt_dict[nt]["ref"]
-                        print(f"{gene} {nt_position} {nt} {ref}")
                         if (not len(ref) == len(nt) or ref == "." or nt == ".") and alt_depth/total_depth >= alt_freq_req:
                             category = info_dict["category"]
                             aa_mut = info_dict["mutation"]
@@ -258,8 +254,8 @@ class MutationFinder:
     
 
     def print_sample_mutations_batch(self, mutation_summaries: dict[dict], summary_output_file: Path = None, matrix_output_file: Path = None) -> None:
-        print_header = ["Sample","Mutation","Gene","Position","Ref","Alt","Ref_codon","Alt_codon"]
-        matrix_header = ["Sample"]+self.aa_mutation_list
+        print_header = ["Sample","Mutation","Gene","Position","Ref","Alt","Ref_codon","Alt_codon","Alt_frequency","Category"]
+        matrix_header = ["Sample"]+self.mutation_list
         o = open(summary_output_file,'w')
         o.write("\t".join(print_header)+"\n")
         om = open(matrix_output_file, 'w')
@@ -271,7 +267,7 @@ class MutationFinder:
                 o.write("\t".join(printlist)+"\n")
             # write to presence/absence matrix output
             matrix_printlist = [sample_name]
-            for mutation in self.aa_mutation_list:
+            for mutation in self.mutation_list:
                 if mutation in mutation_summary:
                     matrix_printlist.append("1")
                 else:

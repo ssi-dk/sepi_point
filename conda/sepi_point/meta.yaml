@@ -1,0 +1,52 @@
+{% set name = "sepi_point" %}
+{% set version = "1.0.0" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  url: https://pypi.org/packages/source/{{ name[0] }}/{{ name }}/sepi_point-{{ version }}.tar.gz
+  sha256: dc59645cae7675ccfb997208f8af958fc098786c508a3813608794b51127dce7
+
+build:
+  entry_points:
+    - sepi_point = sepi_point.sepi_point:main_cli
+    - sepi_point_batch = sepi_point.sepi_point_batch:main_cli
+    - sepi_point_summary = sepi_point.sepi_point_summary:main_cli
+  noarch: python
+  script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+  number: 0
+
+requirements:
+  host:
+    - python >=3.9
+    - uv-build >=0.6.6,<0.7
+    - pip
+  run:
+    - python >=3.9
+    - pandas
+    - numpy
+    - bwa
+    - samtools
+    - bcftools
+    - mummer
+
+test:
+  imports:
+    - sepi_point
+  commands:
+    - pip check
+    - sepi_point --help
+    - sepi_point_batch --help
+    - sepi_point_summary --help
+  requires:
+    - pip
+
+about:
+  summary: 'Detection of point mutation-mediated antimicrobial resistance in Staphylococcus epidermidis '
+  license: MIT
+
+extra:
+  recipe-maintainers:
+    - thej-ssi
