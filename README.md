@@ -40,17 +40,20 @@ To run on paired-end read input from a single isolate:
 To run on genome assembly from a single isolate:
 
 `sepi_point -a <assembly_file.fasta> -o <output_folder>`
+<br>
 
 
-To run batch mode on all isolates in a folder (reads and/or assemblies)
+To run on all genome assemblies in a folder
 
 `sepi_point_batch -a <path_to_assembly_files_folder> -o <output_folder>`
+<br>
 
-or
+To run on all paired-end reads in a folder
 
 `sepi_point_batch -r <path_to_read_files_folder> -o <output_folder>`
+<br>
 
-or 
+To run on both assemblies and reads
 
 `sepi_point_batch -a <path_to_assembly_files_folder> -r <path_to_read_files_folder> -o <output_folder>`
 
@@ -80,6 +83,7 @@ In single isolate mode, all resistance-associated mutations identified will be p
 In batch mode each isolate in the provided input folder(s) will have their own subfolder within the output folder containing results from that isolate.
 
 In addition, <output_folder>/results.tsv will be printed containg the combined results from all isolates, and a tsv will be printed in matrix format with a row for each isolate and a column for each mutation in the database, with presence/absence of mutation being represented with 0/1.
+
 
 
 
