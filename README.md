@@ -70,6 +70,9 @@ To run on both assemblies and reads
 `sepi_point_batch -a <path_to_assembly_files_folder> -r <path_to_read_files_folder> -o <output_folder>`
 
 
+By default intermediate sam and bam-files will be deleted upon completion and only the final results.tsv as well as .vcf and nucmer .snps files will be kept. If you wish to investigate the mapping you can add the -n / --noclean option to keep all intermediate files.
+
+
 ## Inputs ##
 
 SepiPoint expects inputs as .fastq.gz files for paired end reads and fasta-format for assembled genomes.
@@ -95,6 +98,7 @@ In single isolate mode, all resistance-associated mutations identified will be p
 In batch mode each isolate in the provided input folder(s) will have their own subfolder within the output folder containing results from that isolate.
 
 In addition, the base output folder will contain *results.tsv* with the combined results from all isolates, as well as *results.matrix.tsv*, a 0/1 filled matrix with the presence/absence of each mutation in each isolate.
+
 
 
 
