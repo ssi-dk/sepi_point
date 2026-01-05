@@ -4,6 +4,16 @@ SepiPOINT is a simple tool for identifying mutations associated with antimicrobi
 
 
 
+## Installation ##
+
+### From pypi ###
+
+pip install sepi_point
+
+### From Conda ###
+
+conda install thej-ssi::sepi_point
+
 
 
 ### Dependencies ###
@@ -16,45 +26,39 @@ SepiPOINT is a simple tool for identifying mutations associated with antimicrobi
  - bcftools >= 1.22 (Only for paired-end read input)
  - mummer (Only genome assembly input)
 
-### Installation ###
 
-#### From pypi ####
-
-pip install sepi_point
-
-#### From Conda ####
-
-conda install thej-ssi::sepi_point
+Dependencies will be installed automatically if installed with conda install, but when installing via pypi, non-python dependencies will have to be added manually (bwa, samtools, bcftools, mummer)
 
 
 ## Usage ##
 
 To run on paired-end read input from a single isolate:
 
-sepi_point -1 <R1_file.fastq.gz> -2 <R2_file.fastq.gz> -o <output_folder>
+`sepi_point -1 <R1_file.fastq.gz> -2 <R2_file.fastq.gz> -o <output_folder>`
 
 
 To run on genome assembly from a single isolate:
 
-sepi_point -a <assembly_file.fasta> -o <output_folder>
+`sepi_point -a <assembly_file.fasta> -o <output_folder>`
 
 
 To run batch mode on all isolates in a folder (reads and/or assemblies)
 
-sepi_point_batch -a <path_to_assembly_files_folder> -o <output_folder>
+`sepi_point_batch -a <path_to_assembly_files_folder> -o <output_folder>`
 
 or
 
-sepi_point_batch -r <path_to_read_files_folder> -o <output_folder>
+`sepi_point_batch -r <path_to_read_files_folder> -o <output_folder>`
 
 or 
 
-sepi_point_batch -a <path_to_assembly_files_folder> -r <path_to_read_files_folder> -o <output_folder>
+`sepi_point_batch -a <path_to_assembly_files_folder> -r <path_to_read_files_folder> -o <output_folder>`
 
 
 ## Inputs ##
 
 SepiPoint expects inputs as either fastq or fastq.gz files for paired end reads and fasta-format for assembled genomes.
+
 In batch mode the specified folder will be parsed for fastq and or fasta-files. Fasta files are identified by standard prefixes (.fasta, .fa, .fna) and fastq files must follow standard Illumna naming or simple SRA-like naming convention (*_R1.fastq.gz, *_1.fastq.gz, *.R1.fastq.gz, *.1.fasta.gz)
 
 
@@ -64,11 +68,18 @@ In single isolate mode, all resistance-associated mutations identified will be p
 
 | Mutation |	Gene |	Position |	Ref |	Alt |	Ref_codon |	Alt_codon |	Alt_frequency |	Category |
 | -------- |	---- |	-------: |	--- |	--- |	--------- |	--------- |	------------- |	-------- |
-thyA-intergenic::A286G |	thyA-intergenic |	286 |	A |	G |			25/35 |	Trimethoprim-sulfamethoxazole |
-gyrA::S84F |	gyrA |	84 |	S |	F |	TCT |	TTT |	144/144 |	Fluoroquinolone |
-parC::S80F |	parC |	80 |	S |	F |	TCT |	TTT |	98/99 |	Fluoroquinolone |
-qacA4::A157G |	qacA4 |	157 |	A |	G |	GCT |	GGT |	190/190 |	Chlorhexidine |
-rpoB::D471E |	rpoB |	471 |	D |	E |	GAC |	GAA |	164/164 |	Rifampicin, vancomycin |
-rpoB::I527M |	rpoB |	527 |	I |	M |	ATA |	ATG |	163/163 |	Rifampicin, vancomycin |
+| thyA-intergenic::A286G |	thyA-intergenic |	286 |	A |	G |	 |	 |	25/35 |	Trimethoprim-sulfamethoxazole |
+| gyrA::S84F |	gyrA |	84 |	S |	F |	TCT |	TTT |	144/144 |	Fluoroquinolone |
+| parC::S80F |	parC |	80 |	S |	F |	TCT |	TTT |	98/99 |	Fluoroquinolone |
+| qacA4::A157G |	qacA4 |	157 |	A |	G |	GCT |	GGT |	190/190 |	Chlorhexidine |
+| rpoB::D471E |	rpoB |	471 |	D |	E |	GAC |	GAA |	164/164 |	Rifampicin, vancomycin |
+| rpoB::I527M |	rpoB |	527 |	I |	M |	ATA |	ATG |	163/163 |	Rifampicin, vancomycin |
+
+
+
+In batch mode each isolate in the provided input folder(s) will have their own subfolder within the output folder containing results from that isolate.
+
+In addition, <output_folder>/results.tsv will be printed containg the combined results from all isolates, and a tsv will be printed in matrix format with a row for each isolate and a column for each mutation in the database, with presence/absence of mutation being represented with 0/1.
+
 
 
