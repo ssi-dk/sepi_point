@@ -12,8 +12,9 @@ pip install sepi_point
 
 ### From Conda ###
 
-conda install thej-ssi::sepi_point
-
+`conda create -n sepi_point
+conda activate sepi_point
+conda install thej-ssi::sepconda install thej-ssi`
 
 
 ### Dependencies ###
@@ -63,14 +64,14 @@ To run on both assemblies and reads
 
 ## Inputs ##
 
-SepiPoint expects inputs as either fastq or fastq.gz files for paired end reads and fasta-format for assembled genomes.
+SepiPoint expects inputs as .fastq.gz files for paired end reads and fasta-format for assembled genomes.
 
 In batch mode the specified folder will be parsed for fastq and or fasta-files. Fasta files are identified by standard prefixes (.fasta, .fa, .fna) and fastq files must follow standard Illumna naming or simple SRA-like naming convention (*_R1.fastq.gz, *_1.fastq.gz, *.R1.fastq.gz, *.1.fasta.gz)
 
 
 ## Outputs ##
 
-In single isolate mode, all resistance-associated mutations identified will be presented in a tsv-file (results.tsv) like this:
+In single isolate mode, all resistance-associated mutations identified will be presented in a tsv-file (*.results.tsv) like this:
 
 | Mutation |	Gene |	Position |	Ref |	Alt |	Ref_codon |	Alt_codon |	Alt_frequency |	Category |
 | -------- |	---- |	-------: |	--- |	--- |	--------- |	--------- |	------------- |	-------- |
@@ -85,7 +86,8 @@ In single isolate mode, all resistance-associated mutations identified will be p
 
 In batch mode each isolate in the provided input folder(s) will have their own subfolder within the output folder containing results from that isolate.
 
-In addition, <output_folder>/results.tsv will be printed containg the combined results from all isolates, and a tsv will be printed in matrix format with a row for each isolate and a column for each mutation in the database, with presence/absence of mutation being represented with 0/1.
+In addition, the base output folder will contain results.tsv with the combined results from all isolates, as well as results.matrix.tsv, a 0/1 filled matrix with the presence/absence of each mutation in each isolate.
+
 
 
 
