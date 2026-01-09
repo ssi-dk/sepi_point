@@ -43,31 +43,41 @@ Dependencies will be installed automatically if installed with conda install, bu
 
 To run on paired-end read input from a single isolate:
 
-```sepi_point -1 <R1_file.fastq.gz> -2 <R2_file.fastq.gz> -o <output_folder>```
+```
+sepi_point -1 <R1_file.fastq.gz> -2 <R2_file.fastq.gz> -o <output_folder>
+```
 
 
 
 To run on a single genome assembly:
 
-```sepi_point -a <assembly_file.fasta> -o <output_folder>```
+```
+sepi_point -a <assembly_file.fasta> -o <output_folder>
+```
 
 
 
 To run on all genome assemblies in a folder
 
-```sepi_point_batch -a <path_to_assembly_files_folder> -o <output_folder>```
+```
+sepi_point_batch -a <path_to_assembly_files_folder> -o <output_folder>
+```
 
 
 
 To run on all paired-end reads in a folder
 
-```sepi_point_batch -r <path_to_read_files_folder> -o <output_folder>```
+```
+sepi_point_batch -r <path_to_read_files_folder> -o <output_folder>
+```
 
 
 
 To run on both assemblies and reads
 
-```sepi_point_batch -a <path_to_assembly_files_folder> -r <path_to_read_files_folder> -o <output_folder>```
+```
+sepi_point_batch -a <path_to_assembly_files_folder> -r <path_to_read_files_folder> -o <output_folder>
+```
 
 
 By default intermediate sam and bam-files will be deleted upon completion and only the final results.tsv as well as .vcf and nucmer .snps files will be kept. If you wish to investigate the mapping you can add the -n / --noclean option to keep all intermediate files.
@@ -98,6 +108,7 @@ In single isolate mode, all resistance-associated mutations identified will be p
 In batch mode each isolate in the provided input folder(s) will have their own subfolder within the output folder containing results from that isolate.
 
 In addition, the base output folder will contain *results.tsv* with the combined results from all isolates, as well as *results.matrix.tsv*, a 0/1 filled matrix with the presence/absence of each mutation in each isolate.
+
 
 
 
