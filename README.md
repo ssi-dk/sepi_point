@@ -8,7 +8,7 @@ SepiPOINT is a simple tool for identifying mutations associated with antimicrobi
 
 ### From pypi ###
 
-```
+```bash
 pip install sepi_point
 ```
 
@@ -98,6 +98,7 @@ In single isolate mode, all resistance-associated mutations identified will be p
 In batch mode each isolate in the provided input folder(s) will have their own subfolder within the output folder containing results from that isolate.
 
 In addition, the base output folder will contain *results.tsv* with the combined results from all isolates, as well as *results.matrix.tsv*, a 0/1 filled matrix with the presence/absence of each mutation in each isolate.
+
 
 
 
