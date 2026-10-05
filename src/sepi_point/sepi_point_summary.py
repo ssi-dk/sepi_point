@@ -79,7 +79,7 @@ def main_cli():
         summary_putative_output_file=summary_putative_output_file,
         matrix_output_file=matrix_output_file,
         )
-    logger.info("Finished SepiPOINT summarise for %s samples.", len(all_sample_mutations))
+    logger.info("SepiPOINT summary done for %s samples.", len(all_sample_mutations))
 
 
 if __name__ == "__main__":

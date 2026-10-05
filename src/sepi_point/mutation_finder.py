@@ -8,8 +8,6 @@ from pathlib import Path
 from itertools import product
 import subprocess
 
-logger.critical("loaded %s", __name__)
-
 CODON_AA_TABLE = { 
             'ATA':'I', 'ATC':'I', 'ATT':'I', 'ATG':'M', 
             'ACA':'T', 'ACC':'T', 'ACG':'T', 'ACT':'T', 
