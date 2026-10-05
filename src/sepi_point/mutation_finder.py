@@ -34,9 +34,9 @@ class MutationFinder:
         self.tsv_path = mutation_db_tsv.absolute()
         self.fasta_path = sequence_db_fasta.absolute()
         if not self.tsv_path.is_file():
-            logging.critical("Could not find db .tsv file %s", self.tsv_path)
+            logger.critical("Could not find db .tsv file %s", self.tsv_path)
         if not self.fasta_path.is_file():
-            logging.critical("Could not find db .fasta file %s", self.fasta_path)
+            logger.critical("Could not find db .fasta file %s", self.fasta_path)
         self.sequences = NucleotideFasta.from_file(sequence_db_fasta)
         self.protein_sequences = self.sequences.translate()
         mutation_list = []
@@ -44,7 +44,7 @@ class MutationFinder:
         nt_mutation_dict = {}
         indel_dict = {}
         aa_to_codon = setup_aa_to_codon_table()
-        logging.debug("Loading db from file %s", self.tsv_path)
+        logger.debug("Loading db from file %s", self.tsv_path)
         with open(self.tsv_path) as f:
             firstline = True
             for line in f:
