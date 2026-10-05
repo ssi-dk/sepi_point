@@ -1,12 +1,9 @@
 import logging
 logger = logging.getLogger(__name__)
 
-import os
-import sys
-from sepi_point.seqtools import DnaSeq, ProteinSeq, NucleotideFasta, ProteinFasta, translate_dna
+from sepi_point.seqtools import NucleotideFasta
 from pathlib import Path
 from itertools import product
-import subprocess
 
 CODON_AA_TABLE = { 
             'ATA':'I', 'ATC':'I', 'ATT':'I', 'ATG':'M', 
