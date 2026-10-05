@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-
 import sys
 from pathlib import Path
 from sepi_point.mutation_finder import MutationFinder
-from sepi_point.seqtools import WgsData
-import argparse
 from importlib import resources
+import argparse
+import logging
 
+logger = logging.getLogger(__name__)
 
 def parse_args(argv):
     parser = argparse.ArgumentParser(description='Summarize sepi_point results')
@@ -18,44 +18,68 @@ def parse_args(argv):
                         help = "Output Folder. Default <results_dir>",
                         type=Path,
                         required = False)
+    parser.add_argument("-l", "--log_level",
+                        help = "Logging depth. Default: INFO",
+                        type=str,
+                        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+                        default="INFO",
+                        required = False)
     args = parser.parse_args()
     return args
 
 
 def main_cli():
     args = parse_args(argv=sys.argv)
+    FORMAT = '%(asctime)s %(name)s %(levelname)s: %(message)s'
+    logging.basicConfig(
+        filename='EepiPOINTsummary.log', 
+        format=FORMAT, 
+        level=getattr(logging, args.log_level),
+        )
     mutation_db_tsv = resources.files("sepi_point").joinpath("db").joinpath("mutations.tsv")
     mutation_db_fasta = resources.files("sepi_point").joinpath("db").joinpath("sequences.fasta")
-
     ###
     mf = MutationFinder()
     mf.load_and_check_db(mutation_db_tsv=mutation_db_tsv,sequence_db_fasta=mutation_db_fasta)
     all_sample_mutations = {}
+    all_sample_putative_mutations = {}
+    logger.debug("SepiPOINT summary lookiung for samples in '%s' ...", args.results_dir)
     for folder in args.results_dir.iterdir():
         if folder.is_dir():
             sample_name = folder.name
+            mf.sample_name = sample_name
             snps_file = folder.joinpath(f"{sample_name}.snps")
             vcf_file = folder.joinpath(f"{sample_name}.vcf")
-            if vcf_file.exists():
+            if vcf_file.is_file():
                 sample_mutations = mf.get_mutations_from_vcf(vcf_file=vcf_file)
-                sample_mutation_summary = mf.summarize_sample_mutations(sample_mutations=sample_mutations).copy()
+                sample_mutation_summary, sample_putative_mutation_summary = mf.summarize_sample_mutations(sample_mutations=sample_mutations)
                 all_sample_mutations[sample_name] = sample_mutation_summary
-            elif snps_file.exists():
+                all_sample_putative_mutations[sample_name] = sample_putative_mutation_summary
+            elif snps_file.is_file():
                 sample_mutations = mf.get_mutations_from_nucmer_snps(nucmer_snp_file=snps_file)
                 sample_mutation_summary = mf.summarize_sample_mutations(sample_mutations=sample_mutations).copy()
                 all_sample_mutations[sample_name] = sample_mutation_summary
-    print(f"Summarizing sepi_point results from {len(all_sample_mutations)} samples")
+            else:
+                logger.debug("No .vcf or .snps file found for folder '%s'", folder.absolute())
+    logger.debug("Summarized SepiPOINT results from %s samples. Now writing these to file or stdout...", len(all_sample_mutations))
     if args.output:
         summary_output_file = args.output.joinpath("results.tsv")
+        summary_putative_output_file = args.output.joinpath("results.putative.tsv")
         matrix_output_file = args.output.joinpath("results.matrix.tsv")
         if not args.output.exists():
             args.output.mkdir()
     else:
         summary_output_file = args.results_dir.joinpath("results.tsv")
+        summary_putative_output_file = args.results_dir.joinpath("results.putative.tsv")
         matrix_output_file = args.results_dir.joinpath("results.matrix.tsv")
-    mf.print_sample_mutations_batch(mutation_summaries=all_sample_mutations,
-                                    summary_output_file=summary_output_file, matrix_output_file=matrix_output_file)
-    
+    mf.print_sample_mutations_batch(
+        mutation_summaries=all_sample_mutations,
+        putative_mutation_summaries=all_sample_putative_mutations,
+        summary_output_file=summary_output_file,
+        summary_putative_output_file=summary_putative_output_file,
+        matrix_output_file=matrix_output_file,
+        )
+    logger.info("Finished SepiPOINT summarise for %s samples.", len(all_sample_mutations))
 
 
 if __name__ == "__main__":

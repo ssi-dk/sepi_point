@@ -1,10 +1,34 @@
+import logging
+logger = logging.getLogger(__name__)
+
 import os
 import sys
 from sepi_point.seqtools import DnaSeq, ProteinSeq, NucleotideFasta, ProteinFasta, translate_dna
 from pathlib import Path
-import logging
+from itertools import product
 import subprocess
 
+logger.critical("loaded %s", __name__)
+
+CODON_AA_TABLE = { 
+            'ATA':'I', 'ATC':'I', 'ATT':'I', 'ATG':'M', 
+            'ACA':'T', 'ACC':'T', 'ACG':'T', 'ACT':'T', 
+            'AAC':'N', 'AAT':'N', 'AAA':'K', 'AAG':'K', 
+            'AGC':'S', 'AGT':'S', 'AGA':'R', 'AGG':'R', 
+            'CTA':'L', 'CTC':'L', 'CTG':'L', 'CTT':'L', 
+            'CCA':'P', 'CCC':'P', 'CCG':'P', 'CCT':'P', 
+            'CAC':'H', 'CAT':'H', 'CAA':'Q', 'CAG':'Q', 
+            'CGA':'R', 'CGC':'R', 'CGG':'R', 'CGT':'R', 
+            'GTA':'V', 'GTC':'V', 'GTG':'V', 'GTT':'V', 
+            'GCA':'A', 'GCC':'A', 'GCG':'A', 'GCT':'A', 
+            'GAC':'D', 'GAT':'D', 'GAA':'E', 'GAG':'E', 
+            'GGA':'G', 'GGC':'G', 'GGG':'G', 'GGT':'G', 
+            'TCA':'S', 'TCC':'S', 'TCG':'S', 'TCT':'S', 
+            'TTC':'F', 'TTT':'F', 'TTA':'L', 'TTG':'L', 
+            'TAC':'Y', 'TAT':'Y', 'TAA':'*', 'TAG':'*', 
+            'TGC':'C', 'TGT':'C', 'TGA':'*', 'TGG':'W', 
+            '---': '-'
+        }
 
 class MutationFinder:
 
@@ -12,8 +36,12 @@ class MutationFinder:
         return(None)
 
     def load_and_check_db(self, mutation_db_tsv: Path, sequence_db_fasta: Path) -> None:
-        self.tsv_path = os.path.abspath(mutation_db_tsv)
-        self.fasta_path = os.path.abspath(sequence_db_fasta)
+        self.tsv_path = mutation_db_tsv.absolute()
+        self.fasta_path = sequence_db_fasta.absolute()
+        if not self.tsv_path.is_file():
+            logging.critical("Could not find db .tsv file %s", self.tsv_path)
+        if not self.fasta_path.is_file():
+            logging.critical("Could not find db .fasta file %s", self.fasta_path)
         self.sequences = NucleotideFasta.from_file(sequence_db_fasta)
         self.protein_sequences = self.sequences.translate()
         mutation_list = []
@@ -21,6 +49,7 @@ class MutationFinder:
         nt_mutation_dict = {}
         indel_dict = {}
         aa_to_codon = setup_aa_to_codon_table()
+        logging.debug("Loading db from file %s", self.tsv_path)
         with open(self.tsv_path) as f:
             firstline = True
             for line in f:
@@ -51,7 +80,7 @@ class MutationFinder:
                             position = int(mutation[1:-1])
                             ref_aa = mutation[0]
                             if not self.protein_sequences[gene][0].sequence[position-1] == ref_aa:
-                                print(f"Warning. Mutation tsv file contains mutation {gene}::{mutation}, but reference aa does not match fasta file")
+                                logger.warning("Mutation tsv file contains mutation %s::%s, but reference aa does not match fasta file", gene, mutation)
                             alt_aa = mutation[-1]
                             alt_codons = aa_to_codon[alt_aa]
                             if not gene in codon_mutation_dict:
@@ -64,7 +93,7 @@ class MutationFinder:
                         position = int(mutation[1:-1])
                         ref_nt = mutation[0]
                         if not self.sequences[gene][0].sequence[position-1] == ref_nt:
-                            print(f"Warning. Mutation tsv file contains mutation {gene}::{mutation}, but reference nt does not match fasta file")
+                            logger.warning("Mutation tsv file contains mutation %s::%s, but reference nt does not match fasta file", gene, mutation)
                         alt_nt = mutation[-1]
                         if not gene in nt_mutation_dict:
                             nt_mutation_dict[gene] = {str(position): {"mutation": mutation, "ref": ref_nt, "alt": alt_nt, "category": category, "req_frequency": req_frequency}}
@@ -75,12 +104,14 @@ class MutationFinder:
         self.codon_mutation_dict = codon_mutation_dict
         self.nt_mutation_dict = nt_mutation_dict
         self.indel_dict = indel_dict
+        logger.debug("Successfully loaded database %s with references from %s.", self.tsv_path, self.fasta_path)
         return(None)
 
     def get_mutations_from_vcf(self, vcf_file: Path) -> dict:
         sample_mutation_dict = {}
         for gene in self.sequences.seq_names:
             sample_mutation_dict[gene] = {}
+        logger.debug("Reading mutations from %s...", vcf_file)
         with open(vcf_file) as f:
             for line in f:
                 if not line.startswith("##"):
@@ -112,6 +143,7 @@ class MutationFinder:
         sample_mutation_dict = {}
         for gene in self.nt_mutation_dict:
             sample_mutation_dict[gene] = {}
+        logger.debug("Reading mutations from %s...", nucmer_snp_file)
         with open(nucmer_snp_file) as f:
             for line in f:
                 line = line.rstrip('\n').split('\t')
@@ -126,6 +158,7 @@ class MutationFinder:
 
     def get_mutations_from_blast_tsv(self, blast_output_file: Path):
         blast_hit_dict = {}
+        logger.debug("Reading mutations from %s...", blast_output_file)
         with open(blast_output_file) as f:
             for line in f:
                 line = line.rstrip('\n').split('\t')
@@ -169,6 +202,9 @@ class MutationFinder:
 
     def summarize_sample_mutations(self, sample_mutations: dict) -> dict:
         mutation_summary = {}
+        putatuve_mutation_summary = {}
+        # Test for nucleotide mutations
+        logger.debug("Summarising mutations...")
         for gene, position_dict in self.nt_mutation_dict.items():
             for nt_position, nt_dict in position_dict.items():
                 if gene in sample_mutations and nt_position in sample_mutations[gene]:
@@ -188,32 +224,133 @@ class MutationFinder:
                             mut_string = gene+"::"+nt_mut
                             category = nt_dict["category"]
                             mutation_summary[mut_string] = [gene,nt_position,ref_nt,alt_nt,"","",f"{alt_depth}/{total_depth}",category]
+        # Test for aa mutations
+        # logic:
+            # reference is self.codon_mutation_dict, a dict with {gene: {aa_pos: {codon: {...}}}}
+            # sample dict is sample_mutations {gene: {nuc_pos: {alt_nucl: {...}}}}
+            # The idea is to match the codon sequences. For this, we need all the putative codons with their respective alt_freq.
+        # loop over aa reference codons:
         for gene, position_dict in self.codon_mutation_dict.items():
             for aa_position, codon_dict in position_dict.items():
-                start_position = int(aa_position)*3-2
-                sample_codon = ""
-                for position in range(start_position, start_position+3):
-                    if gene in sample_mutations and str(position) in sample_mutations[gene]:
-                        nt_dict = sample_mutations[gene][str(position)]
-                        nt = list(nt_dict.keys())[0]
-                        sample_codon += nt
-                        alt_depth = nt_dict[nt]["alt_depth"]
-                        total_depth = nt_dict[nt]["total_depth"]
-                    else:
-                        sample_codon += self.sequences[gene][0].sequence[position-1]
-                if sample_codon in codon_dict:
-                    try:
-                        alt_freq_req = float(codon_dict[sample_codon]["req_frequency"])
-                    except ValueError:
-                        alt_freq_req = 0
-                    if alt_depth/total_depth >= alt_freq_req:
-                        ref_codon = self.sequences[gene][0].sequence[start_position-1:start_position+2]
-                        ref_aa = codon_dict[sample_codon]["ref"]
-                        alt_aa = codon_dict[sample_codon]["alt"]
-                        aa_mut = codon_dict[sample_codon]["mutation"]
-                        category = codon_dict[sample_codon]["category"]
-                        mutation_summary[gene+"::"+aa_mut] = [gene,aa_position,ref_aa,alt_aa,ref_codon,sample_codon,f"{alt_depth}/{total_depth}",category]
+                if gene in sample_mutations:
+                    start_position = int(aa_position)*3-2
+                    positions = range(start_position, start_position+3)
+                    # Check if positions are found in sample
+                    if any(str(position) in sample_mutations[gene] for position in positions):
+                        ref_codon = self.sequences[gene][0].sequence[min(positions)-1:max(positions)]
+                        nuc_list = [] # A list of dicts like {nt [A,C,G,T]: {type: [ref, alt], pos: pos, freq: freq, alt_depth: alt_depth, total_depth: total_depth,}}
+                        # Get all relevant nucleotides
+                        for position in positions:
+                            per_position_dict = {}
+                            ref_freq = 1
+                            if str(position) in sample_mutations[gene].keys():
+                                for nt, nt_dict in sample_mutations[gene][str(position)].items():
+                                    # print(nt_dict)
+                                    alt_depth = nt_dict["alt_depth"]
+                                    total_depth = nt_dict["total_depth"]
+                                    alt_freq = alt_depth/total_depth
+                                    per_position_dict[nt] = {
+                                        'type': 'alt',
+                                        'pos': position,
+                                        'freq': alt_freq,
+                                        'alt_depth': alt_depth,
+                                        'total_depth': total_depth,
+                                    }
+                                    ref_freq = min(ref_freq, 1)-alt_freq
+                            if ref_freq > 0:
+                                per_position_dict[self.sequences[gene][0].sequence[position-1]] = {
+                                    'type': 'ref',
+                                    'pos': position,
+                                    'freq': ref_freq
+                                }
+                            nuc_list.append(per_position_dict)
+                        # Check all relevant codons individually
+                        for nts in product(*[pos.keys() for pos in nuc_list]):
+                            codon = "".join(nts)
+                            min_freq = min(
+                                nuc_list[i][nt]["freq"]
+                                for i, nt in enumerate(nts)
+                            )
+                            if not codon == ref_codon:
+                                n_alt = len(
+                                    [
+                                        nuc_list[i][nt]["alt_depth"]
+                                        for i, nt in enumerate(nts) if
+                                        nuc_list[i][nt]['type'] == 'alt'
+                                    ]
+                                )
+                                alt_depth = sum(
+                                                nuc_list[i][nt]["alt_depth"]
+                                                for i, nt in enumerate(nts)if
+                                                nuc_list[i][nt]['type'] == 'alt'
+                                            ) / n_alt
+                                total_depth = sum(
+                                            nuc_list[i][nt]["total_depth"]
+                                            for i, nt in enumerate(nts)if
+                                            nuc_list[i][nt]['type'] == 'alt'
+                                        ) / n_alt
+                                # Check the codons
+                                try:
+                                    # alt_freq_req is defined for the AA mutation in mutations.tsv, 
+                                    # but the vcf file has it stored per nucleotide. Therefore, for each codon,
+                                    # we obtain a min_freq here and use that one.
+                                    alt_freq_req = float(codon_dict[codon]["req_frequency"])
+                                except ValueError:
+                                    alt_freq_req = 0
+                                except KeyError:
+                                    # If the codon is not on codon_dict, we need to handle this. 
+                                    # In the future, we might want to output a file with these putative mutations 
+                                    # at relevant positions or include it in the output.
+                                    try:
+                                        ref_aa = CODON_AA_TABLE[ref_codon]
+                                        alt_aa = CODON_AA_TABLE[codon]
+                                    except KeyError:
+                                        logger.warning(
+                                            "%s: Unknown codon discovered in %s::%s: '%s' -> '%s' with minimum alt_freq = %s resulting in no known aa.",
+                                            getattr(self, 'sample_name', "Sample"),
+                                            gene, 
+                                            aa_position, 
+                                            ref_codon,
+                                            codon,
+                                            f"{min_freq:.2f}",
+                                        )
+                                    else:
+                                        if not ref_aa == alt_aa:
+                                            logger.info(
+                                                "%s: Putative new resistance codon mutation found in %s::%s: '%s' -> '%s' with minimum alt_freq = %s resulting in %s%s%s",
+                                                getattr(self, 'sample_name', "Sample"),
+                                                gene, 
+                                                aa_position, 
+                                                ref_codon,
+                                                codon,
+                                                f"{min_freq:.2f}",
+                                                ref_aa,
+                                                aa_position,
+                                                alt_aa,
+                                            )
+                                            putatuve_mutation_summary[gene+"::"+"|".join(list(set([cat["mutation"] for cat in codon_dict.values()])))] = [
+                                                gene
+                                                , aa_position
+                                                , ref_aa
+                                                , alt_aa
+                                                , ref_codon
+                                                , codon
+                                                , f"{alt_depth:.0f}/{total_depth:.0f}"
+                                                , "|".join(list(set([cat["category"] for cat in codon_dict.values()])))
+                                                ]
+                                if min_freq >= alt_freq_req and codon in codon_dict.keys():
+                                    mutation_summary[gene+"::"+codon_dict[codon]["mutation"]] = [
+                                        gene
+                                        , aa_position
+                                        , codon_dict[codon]["ref"] # ref_aa
+                                        , codon_dict[codon]["alt"] # alt_aa
+                                        , ref_codon
+                                        , codon
+                                        , f"{alt_depth:.0f}/{total_depth:.0f}"
+                                        , codon_dict[codon]["category"]
+                                        ]
 
+        # Test for indels
         for gene, position_dict in self.indel_dict.items():
             for aa_position, info_dict in position_dict.items():
                 nt_position = int(aa_position)*3-2
@@ -233,7 +370,7 @@ class MutationFinder:
                             category = info_dict["category"]
                             aa_mut = info_dict["mutation"]
                             mutation_summary[gene+"::"+aa_mut] = [gene,str(aa_position),ref,nt,"","",f"{alt_depth}/{total_depth}",category]
-        return(mutation_summary)
+        return(mutation_summary, putatuve_mutation_summary)
 
     @staticmethod
     def print_sample_mutations(mutation_summary: dict, summary_output_file: Path = None) -> None:
@@ -253,11 +390,21 @@ class MutationFinder:
         return(None)
     
 
-    def print_sample_mutations_batch(self, mutation_summaries: dict[dict], summary_output_file: Path = None, matrix_output_file: Path = None) -> None:
+    def print_sample_mutations_batch(
+            self, 
+            mutation_summaries: dict[dict], 
+            putative_mutation_summaries: dict[dict] | None, 
+            summary_output_file: Path = None, 
+            summary_putative_output_file: Path = None,
+            matrix_output_file: Path = None,
+            ) -> None:
+        logger.debug("Writing results to files...")
         print_header = ["Sample","Mutation","Gene","Position","Ref","Alt","Ref_codon","Alt_codon","Alt_frequency","Category"]
         matrix_header = ["Sample"]+self.mutation_list
         o = open(summary_output_file,'w')
         o.write("\t".join(print_header)+"\n")
+        op = open(summary_putative_output_file,'w')
+        op.write("\t".join(print_header)+"\n")
         om = open(matrix_output_file, 'w')
         om.write("\t".join(matrix_header)+"\n")
         for sample_name, mutation_summary in mutation_summaries.items():
@@ -275,6 +422,14 @@ class MutationFinder:
             om.write("\t".join(matrix_printlist)+"\n")
         o.close()
         om.close()
+        for sample_name, mutation_summary in putative_mutation_summaries.items():
+            # write to long format output
+            for mutation, details in mutation_summary.items():
+                printlist = [sample_name, mutation]+details
+                op.write("\t".join(printlist)+"\n")
+        op.close()
+        logger.debug("Done.")
+
         return(None)
 
     def iter_db_codons(self):
@@ -284,27 +439,8 @@ class MutationFinder:
 
 
 def setup_aa_to_codon_table() -> dict:
-    table = { 
-            'ATA':'I', 'ATC':'I', 'ATT':'I', 'ATG':'M', 
-            'ACA':'T', 'ACC':'T', 'ACG':'T', 'ACT':'T', 
-            'AAC':'N', 'AAT':'N', 'AAA':'K', 'AAG':'K', 
-            'AGC':'S', 'AGT':'S', 'AGA':'R', 'AGG':'R', 
-            'CTA':'L', 'CTC':'L', 'CTG':'L', 'CTT':'L', 
-            'CCA':'P', 'CCC':'P', 'CCG':'P', 'CCT':'P', 
-            'CAC':'H', 'CAT':'H', 'CAA':'Q', 'CAG':'Q', 
-            'CGA':'R', 'CGC':'R', 'CGG':'R', 'CGT':'R', 
-            'GTA':'V', 'GTC':'V', 'GTG':'V', 'GTT':'V', 
-            'GCA':'A', 'GCC':'A', 'GCG':'A', 'GCT':'A', 
-            'GAC':'D', 'GAT':'D', 'GAA':'E', 'GAG':'E', 
-            'GGA':'G', 'GGC':'G', 'GGG':'G', 'GGT':'G', 
-            'TCA':'S', 'TCC':'S', 'TCG':'S', 'TCT':'S', 
-            'TTC':'F', 'TTT':'F', 'TTA':'L', 'TTG':'L', 
-            'TAC':'Y', 'TAT':'Y', 'TAA':'*', 'TAG':'*', 
-            'TGC':'C', 'TGT':'C', 'TGA':'*', 'TGG':'W', 
-            '---': '-'
-        }
     aa_to_codon_table = {}
-    for codon, aa in table.items():
+    for codon, aa in CODON_AA_TABLE.items():
         if aa in aa_to_codon_table:
             aa_to_codon_table[aa].append(codon)
         else:
