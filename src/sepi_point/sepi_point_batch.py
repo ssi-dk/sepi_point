@@ -31,11 +31,14 @@ def parse_args(argv):
                         help = "Do not clean up sam and bam files after variant calling. Default False.",
                         action= "store_true",
                         default=False)
+    parser.add_argument("-l", "--log_level",
+                        help = "Logging depth. Default: INFO",
+                        type=str,
+                        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+                        default="INFO",
+                        required = False)
     args = parser.parse_args()
     return args
-
-
-
 
 
 def main_cli():
@@ -65,14 +68,15 @@ def main_cli():
         print(f"Failed to setup output directory at {args.output}: {e}. Exitting.")
         sys.exit()
 
-    log_file = args.output.joinpath("sepi_point.log")
-    logger = sp.setup_logger(log_file=log_file)
+    log_file = args.output.joinpath("SepiPOINT.log")
+    logger = sp.setup_logger(log_file=log_file, log_level=args.log_level)
     mutation_db_tsv = resources.files("sepi_point").joinpath("db").joinpath("mutations.tsv")
     mutation_db_fasta = resources.files("sepi_point").joinpath("db").joinpath("sequences.fasta")
 
     ###
     wgs_data = WgsData.from_folders(assembly_data_folder=args.assembly_dir, paired_end_read_data_folder=args.read_dir)
     print(f"Loaded data for {len(wgs_data)} samples with read and/or assembly data.")
+    logger.debug("Loaded data for %s samples with read and/or assembly data.", len(wgs_data))
     mf = MutationFinder()
     mf.load_and_check_db(mutation_db_tsv=mutation_db_tsv,sequence_db_fasta=mutation_db_fasta)
 
@@ -129,11 +133,14 @@ def main_cli():
             sample_mutation_summary = mf.summarize_sample_mutations(sample_mutations=sample_mutations).copy()
             mf.print_sample_mutations(mutation_summary=sample_mutation_summary,summary_output_file=output_dir_fasta.joinpath("results.tsv"))
             all_sample_mutations[output_name_fasta] = sample_mutation_summary
+        else:
+            logger.info("No files found to run on for sample %s with file_paths: %s", sample_name, file_paths)
             
-    
+    logger.debug("Done running on samples. Now summarising results...")
     mf.print_sample_mutations_batch(mutation_summaries=all_sample_mutations,
                                     summary_output_file=args.output.joinpath("results.tsv"), matrix_output_file=args.output.joinpath("results.matrix.tsv"))
     
+    logger.info("#### Done running SepiPOINT on %s samples ####", len(all_sample_mutations))
 
 if __name__ == "__main__":
     main_cli()

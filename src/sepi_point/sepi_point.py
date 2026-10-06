@@ -37,6 +37,12 @@ def parse_args(argv):
                         help = "Do not clean up sam and bam files after variant calling. Default False.",
                         action= "store_true",
                         default=False)
+    parser.add_argument("-l", "--log_level",
+                        help = "Logging depth. Default: INFO",
+                        type=str,
+                        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+                        default="INFO",
+                        required = False)
     args = parser.parse_args()
     return args
 
@@ -279,7 +285,7 @@ def main_cli():
     log_file = Path(args.output).joinpath(f"{args.sample_name}.log")
     results_file = Path(args.output).joinpath(f"{args.sample_name}.results.tsv")
 
-    logger = setup_logger(log_file=log_file)
+    logger = setup_logger(log_file=log_file, log_level=args.log_level)
     mutation_db_tsv = resources.files("sepi_point").joinpath("db").joinpath("mutations.tsv")
     mutation_db_fasta = resources.files("sepi_point").joinpath("db").joinpath("sequences.fasta")
 
@@ -305,6 +311,7 @@ def main_cli():
     
     sample_mutation_summary = mf.summarize_sample_mutations(sample_mutations=sample_mutations)
     mf.print_sample_mutations(mutation_summary=sample_mutation_summary,summary_output_file=results_file)
+    logger.info(f"#### DONE RUNNING SEPI_POINT. ####")
 
 
 if __name__ == "__main__":
