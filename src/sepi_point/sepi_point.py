@@ -129,70 +129,58 @@ def check_fasta_inputs(assembly_file: Path, mutation_db_tsv: Path, mutation_db_f
     return(all_files_found)
 
 
-def run_mapping_and_variant_calling(r1_file: Path, r2_file: Path,
-                                    output_dir: Path, output_prefix: str, 
-                                    reference_fasta: Path,
-                                    no_clean: bool, logger) -> Path:
+def run_mapping_and_variant_calling(
+        r1_file: Path, 
+        r2_file: Path,
+        output_dir: Path, 
+        output_prefix: str, 
+        reference_fasta: Path,
+        no_clean: bool, 
+        logger,
+        threads: int = 1,
+        ) -> Path:
     """"
     Run read-mapping and variant calling on paired end read files.
     Return path to vcf file
     """
 
     prefix = output_dir.joinpath(output_prefix)
-    sam = Path(f"{prefix}.sam")                                   # sam file produced from bwa mem mapping to 
-    bam = Path(f"{prefix}.bam")                                   # bam file filtered on q30 and only including mapped reads from primary alignments
-    sorted_bam = Path(f"{prefix}.sorted.bam")                     # sorted bam file
+    sorted_bam = Path(f"{prefix}.sorted.bam")                     # sorted bam file filtered on q30 and only including mapped reads from primary alignments
     sorted_bam_idx = Path(f"{prefix}.sorted.bam.bai")             # sorted bam index file
-    sorted_sam = Path(f"{prefix}.sorted.sam")                     # sorted sam file for parsing
     vcf = Path(f"{prefix}.vcf")                                   # variant calls
 
-    if not vcf.exists() and not sorted_sam.exists() and not sorted_bam.exists() and not bam.exists() and  not sam.exists():
-        cmd = f"bwa mem -v 1 -o {sam} {reference_fasta} {r1_file} {r2_file} 2> /dev/null"
+    # Run read mapping using bwa mem, discard unmapped reads (-F 4) and low quality 
+    # mappings (-q 30) using samtools view and sort using samtools sort
+    if not vcf.exists() and not sorted_bam_idx.exists() and not sorted_bam.exists():
+        cmd = f"bwa mem -v 1 -t {threads} {reference_fasta} {r1_file} {r2_file} | \
+            samtools view -b -F 4 -q 30 - | \
+            samtools sort -o {sorted_bam} 2> /dev/null"
         stdout, stderr = execute_cmd_and_log(cmd=cmd, logger=logger)
     else:
-        logger.info(f"Sam file found at {sam}. Skipping bwa mem read mapping.")
+        logger.info(f"Bam file found at {sorted_bam}. Skipping bwa mem read mapping and samtools view and sort.")
 
-    # Run samtools view to filter unmapped reads and convert to bam
-    # -F 260 to only include mapped and exclude secondary alignments,
-    if not vcf.exists() and not sorted_sam.exists() and not sorted_bam.exists() and not bam.exists():
-        cmd = f"samtools view -q 30 -h -F 4 -O BAM -o {bam} {sam}"
+    # Index bam with samtools index
+    if not vcf.exists() and not sorted_bam_idx.exists():
+        cmd = f"samtools index -o {sorted_bam_idx} {sorted_bam}"
         stdout, stderr = execute_cmd_and_log(cmd=cmd, logger=logger)
     else:
-        logger.info(f"Bam file found at {bam}.")
+        logger.info(f"Sorted, indexed bam file found at {sorted_bam_idx}.")
 
-    # Sort and index bam with samtools
-    if not vcf.exists() and not sorted_sam.exists() and (not sorted_bam.exists() or not sorted_bam_idx.exists()):
-        cmd = f"samtools sort {bam} -o {sorted_bam}; samtools index -o {sorted_bam_idx} {sorted_bam}"
-        stdout, stderr = execute_cmd_and_log(cmd=cmd, logger=logger)
-    else:
-        logger.info(f"Sorted bam file found at {sorted_bam}.")
-
-
-    # Run samtools view to convert bam to sam
-    if not vcf.exists() and not sorted_sam.exists():
-        cmd = f"samtools view -h -O SAM -o {sorted_sam} {sorted_bam}"
-        stdout, stderr = execute_cmd_and_log(cmd=cmd, logger=logger)
-    else:
-        logger.info(f"Sorted sam file found at{sorted_sam}.")
-    
-    # run bcftools call to generate vcf
+    # run bcftools mpileup including anomalous read pairs (-A) and max 10000 reads (-d), 
+    # then call variants to generate vcf file using alternative model for multiallelic and 
+    # rare-variant calling (-m) and output variant sites only (-v)
     if not vcf.exists():
-        cmd = f"bcftools mpileup -A -f {reference_fasta} {sorted_sam} | bcftools call -p 0.5 --ploidy 2 -mv -Ov -o {vcf}"
-        stdout, stderr = execute_cmd_and_log(cmd=cmd, logger=logger,log_stdout=False, log_stderr=False)
+        cmd = f"bcftools mpileup -A -Ou -d 10000 -f {reference_fasta} {sorted_bam} | \
+            bcftools call -mv -Ov -o {vcf}"
+        stdout, stderr = execute_cmd_and_log(cmd=cmd, logger=logger, log_stdout=False, log_stderr=False)
     else:
         logger.info(f"Vcf file found at {vcf}.")
     
     if not no_clean:
-        if sam.exists():
-            sam.unlink()
-        if bam.exists():
-            bam.unlink()
         if sorted_bam.exists():
             sorted_bam.unlink()
         if sorted_bam_idx.exists():
             sorted_bam_idx.unlink()
-        if sorted_sam.exists():
-            sorted_sam.unlink()
         logger.info(f"Cleaned up bam and sam files from output_folder")
 
     return(vcf)
