@@ -333,6 +333,21 @@ class MutationFinder:
                                                 , f"{alt_depth:.0f}/{total_depth:.0f}"
                                                 , "|".join(list(set([cat["category"] for cat in codon_dict.values()])))
                                                 ]
+                                            continue
+                                        else:
+                                            logger.debug(
+                                                "Silent mutation found in sample %s: %s::%s: '%s' -> '%s' with minimum alt_freq = %s resulting in %s%s%s",
+                                                getattr(self, 'sample_name', "Sample"),
+                                                gene,
+                                                aa_position,
+                                                ref_codon,
+                                                codon,
+                                                f"{min_freq:.2f}",
+                                                ref_aa,
+                                                aa_position,
+                                                alt_aa,
+                                                )
+                                            continue
                                 if min_freq >= alt_freq_req and codon in codon_dict.keys():
                                     mutation_summary[gene+"::"+codon_dict[codon]["mutation"]] = [
                                         gene
