@@ -52,15 +52,14 @@ def main_cli():
             vcf_file = folder.joinpath(f"{sample_name}.vcf")
             if vcf_file.is_file():
                 sample_mutations = mf.get_mutations_from_vcf(vcf_file=vcf_file)
-                sample_mutation_summary, sample_putative_mutation_summary = mf.summarize_sample_mutations(sample_mutations=sample_mutations)
-                all_sample_mutations[sample_name] = sample_mutation_summary
-                all_sample_putative_mutations[sample_name] = sample_putative_mutation_summary
             elif snps_file.is_file():
                 sample_mutations = mf.get_mutations_from_nucmer_snps(nucmer_snp_file=snps_file)
-                sample_mutation_summary = mf.summarize_sample_mutations(sample_mutations=sample_mutations).copy()
-                all_sample_mutations[sample_name] = sample_mutation_summary
             else:
                 logger.debug("No .vcf or .snps file found for folder '%s'", folder.absolute())
+                continue
+            sample_mutation_summary, sample_putative_mutation_summary = mf.summarize_sample_mutations(sample_mutations=sample_mutations)
+            all_sample_mutations[sample_name] = sample_mutation_summary
+            all_sample_putative_mutations[sample_name] = sample_putative_mutation_summary
     logger.debug("Summarized SepiPOINT results from %s samples. Now writing these to file or stdout...", len(all_sample_mutations))
     if args.output:
         summary_output_file = args.output.joinpath("results.tsv")
