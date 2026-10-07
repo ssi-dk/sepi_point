@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
+import logging
+logger = logging.getLogger(__name__)
+
 import sys
 from pathlib import Path
 from sepi_point.mutation_finder import MutationFinder
+from sepi_point.sepi_point import setup_logger
 from importlib import resources
 import argparse
 import logging
-
-logger = logging.getLogger(__name__)
 
 def parse_args(argv):
     parser = argparse.ArgumentParser(description='Summarize sepi_point results')
@@ -30,12 +32,7 @@ def parse_args(argv):
 
 def main_cli():
     args = parse_args(argv=sys.argv)
-    FORMAT = '%(asctime)s %(name)s %(levelname)s: %(message)s'
-    logging.basicConfig(
-        filename='EepiPOINTsummary.log', 
-        format=FORMAT, 
-        level=getattr(logging, args.log_level),
-        )
+    logger = setup_logger(log_file='EepiPOINTsummary.log', log_level=args.log_level)
     mutation_db_tsv = resources.files("sepi_point").joinpath("db").joinpath("mutations.tsv")
     mutation_db_fasta = resources.files("sepi_point").joinpath("db").joinpath("sequences.fasta")
     ###
