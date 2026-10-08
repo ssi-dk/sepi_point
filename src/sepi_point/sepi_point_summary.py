@@ -40,7 +40,7 @@ def parse_args(argv):
 
 def main_cli():
     args = parse_args(argv=sys.argv)
-    logger = setup_logger(log_file='EepiPOINTsummary.log', log_level=args.log_level)
+    logger = setup_logger(log_file='SepiPOINT_summary.log', log_level=args.log_level)
     mutation_db_tsv = args.mutation_tsv if args.mutation_tsv else resources.files("sepi_point").joinpath("db").joinpath("mutations.tsv")
     mutation_db_fasta = args.mutation_fasta if args.mutation_fasta else resources.files("sepi_point").joinpath("db").joinpath("sequences.fasta")
     ###
