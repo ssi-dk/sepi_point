@@ -255,7 +255,7 @@ class MutationFinder:
                         for position in positions:
                             per_position_dict = {}
                             ref_freq = 1
-                            if str(position) in sample_mutations[gene].keys():
+                            if str(position) in sample_mutations[gene]:
                                 for nt, nt_dict in sample_mutations[gene][str(position)].items():
                                     alt_depth = nt_dict["alt_depth"]
                                     total_depth = nt_dict["total_depth"]
@@ -364,7 +364,7 @@ class MutationFinder:
                                                 alt_aa,
                                                 )
                                             continue
-                                if min_freq >= alt_freq_req and codon in codon_dict.keys():
+                                if min_freq >= alt_freq_req and codon in codon_dict:
                                     mutation_summary[gene+"::"+codon_dict[codon]["mutation"]] = [
                                         gene
                                         , aa_position
@@ -383,19 +383,18 @@ class MutationFinder:
                 check_start = nt_position - 6
                 for nt_pos in range(check_start, nt_position):
                     if str(nt_pos) in sample_mutations[gene]:
-                        nt_dict = sample_mutations[gene][str(nt_pos)]
-                        nt = list(nt_dict.keys())[0]
-                        alt_depth = nt_dict[nt]["alt_depth"]
-                        total_depth = nt_dict[nt]["total_depth"]
-                        try:
-                            alt_freq_req = float(info_dict["req_frequency"])
-                        except ValueError:
-                            alt_freq_req = 0
-                        ref = nt_dict[nt]["ref"]
-                        if (not len(ref) == len(nt) or ref == "." or nt == ".") and alt_depth/total_depth >= alt_freq_req:
-                            category = info_dict["category"]
-                            aa_mut = info_dict["mutation"]
-                            mutation_summary[gene+"::"+aa_mut] = [gene,str(aa_position),ref,nt,"","",f"{alt_depth}/{total_depth}",category]
+                        for nt, nt_dict in sample_mutations[gene][str(nt_pos)].items():
+                            alt_depth = nt_dict[nt]["alt_depth"]
+                            total_depth = nt_dict[nt]["total_depth"]
+                            try:
+                                alt_freq_req = float(info_dict["req_frequency"])
+                            except ValueError:
+                                alt_freq_req = 0
+                            ref = nt_dict[nt]["ref"]
+                            if (not len(ref) == len(nt) or ref == "." or nt == ".") and alt_depth/total_depth >= alt_freq_req:
+                                category = info_dict["category"]
+                                aa_mut = info_dict["mutation"]
+                                mutation_summary[gene+"::"+aa_mut] = [gene,str(aa_position),ref,nt,"","",f"{alt_depth}/{total_depth}",category]
         return(mutation_summary, putatuve_mutation_summary)
 
     @staticmethod
@@ -407,12 +406,14 @@ class MutationFinder:
                 printlist = [mutation]+details
                 print("\t".join(printlist))
         else:
+            logger.debug("Writing results to file...")
             o = open(summary_output_file,'w')
             o.write("\t".join(print_header)+"\n")
             for mutation, details in mutation_summary.items():
                 printlist = [mutation]+details
                 o.write("\t".join(printlist)+"\n")
             o.close()
+            logger.debug("Results written to file %s.", summary_output_file)
         return(None)
     
 
@@ -454,7 +455,7 @@ class MutationFinder:
                 printlist = [sample_name, mutation]+details
                 op.write("\t".join(printlist)+"\n")
         op.close()
-        logger.debug("Done.")
+        logger.debug("Results written to files %s, %s, and %s.", summary_output_file, matrix_output_file, summary_putative_output_file)
 
         return(None)
 
