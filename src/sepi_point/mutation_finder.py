@@ -204,21 +204,38 @@ class MutationFinder:
             for nt_position, nt_dict in position_dict.items():
                 if gene in sample_mutations and nt_position in sample_mutations[gene]:
                     alt_nt = nt_dict["alt"]
-                    if alt_nt in sample_mutations[gene][nt_position]:
-                        info_dict = sample_mutations[gene][str(nt_position)]
-                        nt = list(info_dict.keys())[0]
-                        alt_depth = info_dict[nt]["alt_depth"]
-                        total_depth = info_dict[nt]["total_depth"]
-                        try:
-                            alt_freq_req = float(nt_dict["req_frequency"])
-                        except ValueError:
-                            alt_freq_req = 0
-                        if alt_depth/total_depth >= alt_freq_req:
-                            ref_nt = nt_dict["ref"]
-                            nt_mut = ref_nt+nt_position+alt_nt
-                            mut_string = gene+"::"+nt_mut
-                            category = nt_dict["category"]
-                            mutation_summary[mut_string] = [gene,nt_position,ref_nt,alt_nt,"","",f"{alt_depth}/{total_depth}",category]
+                    ref_nt = nt_dict["ref"]
+                    category = nt_dict["category"]
+                    try:
+                        alt_freq_req = float(nt_dict["req_frequency"])
+                    except ValueError:
+                        alt_freq_req = 0
+                    for nt, info_dict in sample_mutations[gene][nt_position].items():
+                        alt_depth = info_dict["alt_depth"]
+                        total_depth = info_dict["total_depth"]
+                        if nt == alt_nt:
+                            if alt_depth/total_depth >= alt_freq_req:
+                                nt_mut = ref_nt+nt_position+alt_nt
+                                mut_string = gene+"::"+nt_mut
+                                mutation_summary[mut_string] = [gene,nt_position,ref_nt,alt_nt,"","",f"{alt_depth}/{total_depth}",category]
+                        elif not nt == ref_nt:
+                            if alt_depth/total_depth >= alt_freq_req:
+                                nt_mut = ref_nt+nt_position+nt
+                                mut_string = gene+"::"+nt_mut
+                                logger.info(
+                                    "%s: Putative new resistance mutation found in %s::%s: '%s' -> '%s' with minimum alt_freq = %s resulting in %s%s%s",
+                                    getattr(self, 'sample_name', "Sample"),
+                                    gene,
+                                    nt_position,
+                                    ref_nt,
+                                    nt,
+                                    f"{alt_depth/total_depth:.2f}",
+                                    ref_nt,
+                                    nt_position,
+                                    alt_nt,
+                                )
+                                putatuve_mutation_summary[mut_string] = [gene,nt_position,ref_nt,nt,"","",f"{alt_depth}/{total_depth}",category]
+
         # Test for aa mutations
         # logic:
             # reference is self.codon_mutation_dict, a dict with {gene: {aa_pos: {codon: {...}}}}
@@ -240,7 +257,6 @@ class MutationFinder:
                             ref_freq = 1
                             if str(position) in sample_mutations[gene].keys():
                                 for nt, nt_dict in sample_mutations[gene][str(position)].items():
-                                    # print(nt_dict)
                                     alt_depth = nt_dict["alt_depth"]
                                     total_depth = nt_dict["total_depth"]
                                     alt_freq = alt_depth/total_depth
@@ -314,8 +330,8 @@ class MutationFinder:
                                             logger.info(
                                                 "%s: Putative new resistance codon mutation found in %s::%s: '%s' -> '%s' with minimum alt_freq = %s resulting in %s%s%s",
                                                 getattr(self, 'sample_name', "Sample"),
-                                                gene, 
-                                                aa_position, 
+                                                gene,
+                                                aa_position,
                                                 ref_codon,
                                                 codon,
                                                 f"{min_freq:.2f}",
