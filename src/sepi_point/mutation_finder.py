@@ -229,7 +229,7 @@ class MutationFinder:
                                     nt_position,
                                     ref_nt,
                                     nt,
-                                    f"{alt_depth/total_depth:.2f}",
+                                    f"{alt_depth:.2f}/{total_depth:.2f}",
                                     ref_nt,
                                     nt_position,
                                     alt_nt,
