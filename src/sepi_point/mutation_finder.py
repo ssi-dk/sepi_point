@@ -384,13 +384,13 @@ class MutationFinder:
                 for nt_pos in range(check_start, nt_position):
                     if str(nt_pos) in sample_mutations[gene]:
                         for nt, nt_dict in sample_mutations[gene][str(nt_pos)].items():
-                            alt_depth = nt_dict[nt]["alt_depth"]
-                            total_depth = nt_dict[nt]["total_depth"]
+                            alt_depth = nt_dict["alt_depth"]
+                            total_depth = nt_dict["total_depth"]
                             try:
                                 alt_freq_req = float(info_dict["req_frequency"])
                             except ValueError:
                                 alt_freq_req = 0
-                            ref = nt_dict[nt]["ref"]
+                            ref = nt_dict["ref"]
                             if (not len(ref) == len(nt) or ref == "." or nt == ".") and alt_depth/total_depth >= alt_freq_req:
                                 category = info_dict["category"]
                                 aa_mut = info_dict["mutation"]
