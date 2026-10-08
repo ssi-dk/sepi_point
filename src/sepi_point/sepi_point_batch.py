@@ -25,6 +25,14 @@ def parse_args(argv):
                         help = "Output directory.",
                         type=Path,
                         required = True)
+    parser.add_argument("-m", "--mutation_tsv",
+                        help = "A custom .tsv file with mutations to be called. Must agree with the reference fasta.",
+                        type=Path,
+                        required = False)
+    parser.add_argument("-f", "--mutation_fasta",
+                        help = "A custom reference fasta file. Must agree with the mutation db .tsv.",
+                        type=Path,
+                        required = False)
     parser.add_argument("-n", "--no_clean",
                         help = "Do not clean up sam and bam files after variant calling. Default False.",
                         action= "store_true",
@@ -68,8 +76,8 @@ def main_cli():
 
     log_file = args.output.joinpath("SepiPOINT.log")
     logger = sp.setup_logger(log_file=log_file, log_level=args.log_level)
-    mutation_db_tsv = resources.files("sepi_point").joinpath("db").joinpath("mutations.tsv")
-    mutation_db_fasta = resources.files("sepi_point").joinpath("db").joinpath("sequences.fasta")
+    mutation_db_tsv = args.mutation_tsv if args.mutation_tsv else resources.files("sepi_point").joinpath("db").joinpath("mutations.tsv")
+    mutation_db_fasta = args.mutation_fasta if args.mutation_fasta else resources.files("sepi_point").joinpath("db").joinpath("sequences.fasta")
     logger.info(f"#### RUNNING SepiPOINT in batch mode ####")
     logger.info(f"Checking for mutations found in {mutation_db_tsv}")
     logger.info(f"Reference fasta file: {mutation_db_fasta}")
