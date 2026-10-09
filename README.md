@@ -1,18 +1,18 @@
-# SepiPOINT #
+# SepiPOINT
 
 SepiPOINT is a simple tool for identifying mutations associated with antimicrobial resistance in whole genome sequencing data from *Staphylococcus epidermidis* isolates.
 
 
 
-## Installation ##
+## Installation
 
-### From pypi ###
+### From pypi
 
 ```bash
 pip install sepi_point
 ```
 
-### From Conda ###
+### From Conda
 
 ```
 conda create -n sepi_point
@@ -25,7 +25,7 @@ sepi_point -h
 ```
 
 
-### Dependencies ###
+### Dependencies
 
  - Python >= 3.9
  - pandas
@@ -39,7 +39,7 @@ sepi_point -h
 Dependencies will be installed automatically if installed with conda install, but when installing via pypi, non-python dependencies will have to be added manually (bwa, samtools, bcftools, mummer)
 
 
-## Usage ##
+## Usage
 
 To run on paired-end read input from a single isolate:
 
@@ -80,19 +80,25 @@ sepi_point_batch -a <path_to_assembly_files_folder> -r <path_to_read_files_folde
 ```
 
 
-By default intermediate sam and bam-files will be deleted upon completion and only the final results.tsv as well as .vcf and nucmer .snps files will be kept. If you wish to investigate the mapping you can add the -n / --noclean option to keep all intermediate files.
+To summarise previously computed results
+
+```
+sepi_point_summary -r <path_to_result_folder> -o <output_folder>
+```
+
+By default intermediate sam and bam-files will be deleted upon completion and only the final `results.tsv` as well as `.vcf` and nucmer `.snps` files will be kept. If you wish to investigate the mapping you can add the `-n` / `--noclean` option to keep all intermediate files.
 
 
-## Inputs ##
+## Inputs
 
-SepiPoint expects inputs as .fastq.gz files for paired end reads and fasta-format for assembled genomes.
+SepiPoint expects inputs as `.fastq.gz` files for paired end reads and fasta-format for assembled genomes.
 
-In batch mode the specified folder will be parsed for fastq and or fasta-files. Fasta files are identified by standard prefixes (.fasta, .fa, .fna) and fastq files must follow standard Illumna naming or simple SRA-like naming convention (*_R1.fastq.gz, *_1.fastq.gz, *.R1.fastq.gz, *.1.fasta.gz)
+In batch mode the specified folder will be parsed for fastq and or fasta-files. Fasta files are identified by standard prefixes (`.fasta`, `.fa`, `.fna`) and fastq files must follow standard Illumna naming or simple SRA-like naming convention (`*_R1.fastq.gz`, `*_1.fastq.gz`, `*.R1.fastq.gz`, `*.1.fasta.gz`)
 
 
-## Outputs ##
+## Outputs
 
-In single isolate mode, all resistance-associated mutations identified will be presented in a tsv-file (*.results.tsv) like this:
+In single isolate mode, all resistance-associated mutations identified will be presented in a tsv-file (`*.results.tsv`) like this:
 
 | Mutation |	Gene |	Position |	Ref |	Alt |	Ref_codon |	Alt_codon |	Alt_frequency |	Category |
 | -------- |	---- |	-------: |	--- |	--- |	--------- |	--------- |	------------- |	-------- |
@@ -107,19 +113,15 @@ In single isolate mode, all resistance-associated mutations identified will be p
 
 In batch mode each isolate in the provided input folder(s) will have their own subfolder within the output folder containing results from that isolate.
 
-In addition, the base output folder will contain *results.tsv* with the combined results from all isolates, as well as *results.matrix.tsv*, a 0/1 filled matrix with the presence/absence of each mutation in each isolate.
+In addition, the base output folder will contain `results.tsv` with the combined results from all isolates, as well as `results.matrix.tsv`, a 0/1 filled matrix with the presence/absence of each mutation in each isolate.  
+
+Since version `1.1`, in addition to these files, sepi_point_summary (used in batch mode) will output a file called `results.putative.tsv`, containing non-documented mutations at documented positions of the refrerence genes, both for nucleotide and amino acid mutations. 
 
 
+## Contributions
+For contributions with pointmutations conferring resistance to antimicrobials, biocides, and metals in *S. epidermidis*, plese [file an issue](https://github.com/ssi-dk/sepi_point/issues) in this repo providing the reference gene, the mutation information (see [mutations.tsv](https://github.com/ssi-dk/sepi_point/blob/main/src/sepi_point/db/mutations.tsv) for reference), the supporting evidence, and your contact information and we will be in touch. 
 
+For code contributions to the tool, please [file an issue](https://github.com/ssi-dk/sepi_point/issues) or make a pull request in this repo.  
 
-
-
-
-
-
-
-
-
-
-
-
+## Citation
+A manuscript describing SepiPOINT is currently in preparation. Please use the url to this repo for now.
